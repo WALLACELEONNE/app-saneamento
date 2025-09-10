@@ -1,0 +1,816 @@
+app.js:59 SyntaxError: Unexpected token '(', "((e, i, s,"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at window.onload (app.js:59:731)
+hook.js:608  Warning: Cannot update a component (`HotReload`) while rendering a different component (`SelectItem`). To locate the bad setState() call inside `SelectItem`, follow the stack trace as described in https://reactjs.org/link/setstate-in-render Error Component Stack
+    at eval (index.mjs:800:7)
+    at _c8 (select.tsx:117:6)
+    at div (<anonymous>)
+    at eval (index.mjs:28:13)
+    at eval (index.mjs:33:13)
+    at eval (index.mjs:9:13)
+    at eval (index.mjs:27:15)
+    at eval (index.mjs:711:13)
+    at div (<anonymous>)
+    at eval (index.mjs:33:13)
+    at eval (index.mjs:9:13)
+    at eval (index.mjs:27:15)
+    at Provider (index.mjs:27:15)
+    at eval (index.mjs:256:58)
+    at eval (index.mjs:33:13)
+    at eval (index.mjs:9:13)
+    at eval (index.mjs:28:13)
+    at eval (index.mjs:11:22)
+    at SelectPortal (<anonymous>)
+    at _c4 (select.tsx:73:6)
+    at Provider (index.mjs:27:15)
+    at Provider (index.mjs:27:15)
+    at CollectionProvider (index.mjs:17:13)
+    at Provider (index.mjs:27:15)
+    at Provider (index.mjs:27:15)
+    at Popper (index.mjs:30:11)
+    at Select (index.mjs:42:5)
+    at div (<anonymous>)
+    at eval (form.tsx:78:6)
+    at Controller (index.esm.mjs:575:37)
+    at FormField (form.tsx:35:6)
+    at div (<anonymous>)
+    at form (<anonymous>)
+    at FormProvider (index.esm.mjs:194:13)
+    at FiltersForm (filters-form.tsx:49:27)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at InnerLayoutRouter (layout-router.js:247:11)
+    at RedirectErrorBoundary (redirect-boundary.js:77:9)
+    at RedirectBoundary (redirect-boundary.js:85:11)
+    at NotFoundErrorBoundary (not-found-boundary.js:78:9)
+    at NotFoundBoundary (not-found-boundary.js:86:11)
+    at LoadingBoundary (layout-router.js:341:11)
+    at ErrorBoundary (error-boundary.js:166:11)
+    at InnerScrollAndFocusHandler (layout-router.js:158:9)
+    at ScrollAndFocusHandler (layout-router.js:233:11)
+    at RenderFromTemplateContext (render-from-template-context.js:18:43)
+    at OuterLayoutRouter (layout-router.js:359:11)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at QueryClientProvider (QueryClientProvider.js:20:3)
+    at Providers (providers.tsx:12:29)
+    at V (index.mjs:1:856)
+    at J (index.mjs:1:735)
+    at ThemeProvider (theme-provider.tsx:11:33)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at NotFoundErrorBoundary (not-found-boundary.js:78:9)
+    at NotFoundBoundary (not-found-boundary.js:86:11)
+    at RedirectErrorBoundary (redirect-boundary.js:77:9)
+    at RedirectBoundary (redirect-boundary.js:85:11)
+    at NotFoundErrorBoundary (not-found-boundary.js:78:9)
+    at NotFoundBoundary (not-found-boundary.js:86:11)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.js:37:11)
+    at ReactDevOverlay (ReactDevOverlay.js:84:9)
+    at HotReload (hot-reloader-client.js:328:11)
+    at Router (app-router.js:190:11)
+    at ErrorBoundaryHandler (error-boundary.js:120:9)
+    at ErrorBoundary (error-boundary.js:166:11)
+    at AppRouter (app-router.js:539:13)
+    at ServerRoot (app-index.js:125:11)
+    at RSCComponent (<anonymous>)
+    at Root (app-index.js:135:11)
+overrideMethod @ hook.js:608
+window.console.error @ app-index.js:33
+console.error @ hydration-error-info.js:45
+printWarning @ react-dom.development.js:94
+error @ react-dom.development.js:68
+warnAboutRenderPhaseUpdatesInDEV @ react-dom.development.js:26854
+scheduleUpdateOnFiber @ react-dom.development.js:24323
+dispatchReducerAction @ react-dom.development.js:12857
+eval @ hot-reloader-client.js:366
+eval @ use-error-handler.js:70
+invokeGuardedCallbackImpl @ react-dom.development.js:20547
+invokeGuardedCallback @ react-dom.development.js:20622
+beginWork @ react-dom.development.js:26813
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+index.mjs:824  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at HTMLUnknownElement.callCallback (react-dom.development.js:20498:14)
+    at Object.invokeGuardedCallbackImpl (react-dom.development.js:20547:16)
+    at invokeGuardedCallback (react-dom.development.js:20622:29)
+    at beginWork (react-dom.development.js:26813:7)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at performSyncWorkOnRoot (react-dom.development.js:24777:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+callCallback @ react-dom.development.js:20498
+invokeGuardedCallbackImpl @ react-dom.development.js:20547
+invokeGuardedCallback @ react-dom.development.js:20622
+beginWork @ react-dom.development.js:26813
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+redirect-boundary.js:61  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at performSyncWorkOnRoot (react-dom.development.js:24777:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+not-found-boundary.js:39  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at performSyncWorkOnRoot (react-dom.development.js:24777:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+not-found-boundary.js:39  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at performSyncWorkOnRoot (react-dom.development.js:24777:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+redirect-boundary.js:61  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at performSyncWorkOnRoot (react-dom.development.js:24777:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+not-found-boundary.js:39  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at performSyncWorkOnRoot (react-dom.development.js:24777:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+performSyncWorkOnRoot @ react-dom.development.js:24777
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+index.mjs:824  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at HTMLUnknownElement.callCallback (react-dom.development.js:20498:14)
+    at Object.invokeGuardedCallbackImpl (react-dom.development.js:20547:16)
+    at invokeGuardedCallback (react-dom.development.js:20622:29)
+    at beginWork (react-dom.development.js:26813:7)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at recoverFromConcurrentError (react-dom.development.js:24525:20)
+    at performSyncWorkOnRoot (react-dom.development.js:24789:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+callCallback @ react-dom.development.js:20498
+invokeGuardedCallbackImpl @ react-dom.development.js:20547
+invokeGuardedCallback @ react-dom.development.js:20622
+beginWork @ react-dom.development.js:26813
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+recoverFromConcurrentError @ react-dom.development.js:24525
+performSyncWorkOnRoot @ react-dom.development.js:24789
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+redirect-boundary.js:61  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at recoverFromConcurrentError (react-dom.development.js:24525:20)
+    at performSyncWorkOnRoot (react-dom.development.js:24789:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+recoverFromConcurrentError @ react-dom.development.js:24525
+performSyncWorkOnRoot @ react-dom.development.js:24789
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+not-found-boundary.js:39  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at recoverFromConcurrentError (react-dom.development.js:24525:20)
+    at performSyncWorkOnRoot (react-dom.development.js:24789:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+recoverFromConcurrentError @ react-dom.development.js:24525
+performSyncWorkOnRoot @ react-dom.development.js:24789
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+not-found-boundary.js:39  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at recoverFromConcurrentError (react-dom.development.js:24525:20)
+    at performSyncWorkOnRoot (react-dom.development.js:24789:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+recoverFromConcurrentError @ react-dom.development.js:24525
+performSyncWorkOnRoot @ react-dom.development.js:24789
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+redirect-boundary.js:61  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at recoverFromConcurrentError (react-dom.development.js:24525:20)
+    at performSyncWorkOnRoot (react-dom.development.js:24789:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+recoverFromConcurrentError @ react-dom.development.js:24525
+performSyncWorkOnRoot @ react-dom.development.js:24789
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+not-found-boundary.js:39  Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at eval (index.mjs:824:13)
+    at renderWithHooks (react-dom.development.js:11021:18)
+    at updateForwardRef (react-dom.development.js:15686:20)
+    at beginWork$1 (react-dom.development.js:18445:16)
+    at beginWork (react-dom.development.js:26791:14)
+    at performUnitOfWork (react-dom.development.js:25637:12)
+    at workLoopSync (react-dom.development.js:25353:5)
+    at renderRootSync (react-dom.development.js:25308:7)
+    at recoverFromConcurrentError (react-dom.development.js:24525:20)
+    at performSyncWorkOnRoot (react-dom.development.js:24789:20)
+    at flushSyncWorkAcrossRoots_impl (react-dom.development.js:10286:13)
+    at flushSyncWorkOnAllRoots (react-dom.development.js:10246:3)
+    at commitRootImpl (react-dom.development.js:26244:3)
+    at commitRoot (react-dom.development.js:25957:5)
+    at commitRootWhenReady (react-dom.development.js:24677:3)
+    at finishConcurrentRender (react-dom.development.js:24642:5)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24487:9)
+    at workLoop (scheduler.development.js:256:34)
+    at flushWork (scheduler.development.js:225:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+eval @ index.mjs:824
+renderWithHooks @ react-dom.development.js:11021
+updateForwardRef @ react-dom.development.js:15686
+beginWork$1 @ react-dom.development.js:18445
+beginWork @ react-dom.development.js:26791
+performUnitOfWork @ react-dom.development.js:25637
+workLoopSync @ react-dom.development.js:25353
+renderRootSync @ react-dom.development.js:25308
+recoverFromConcurrentError @ react-dom.development.js:24525
+performSyncWorkOnRoot @ react-dom.development.js:24789
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+hook.js:608  The above error occurred in the <NotFoundErrorBoundary> component:
+
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:76:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
+    at DevRootNotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/dev-root-not-found-boundary.js:33:11)
+    at ReactDevOverlay (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/internal/ReactDevOverlay.js:84:9)
+    at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js:307:11)
+    at Router (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:181:11)
+    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:114:9)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:161:11)
+    at AppRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:536:13)
+    at ServerRoot (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:129:11)
+    at RSCComponent
+    at Root (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:145:11)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ReactDevOverlay.
+overrideMethod @ hook.js:608
+window.console.error @ app-index.js:33
+console.error @ hydration-error-info.js:45
+logCapturedError @ react-dom.development.js:15128
+callback @ react-dom.development.js:15190
+callCallback @ react-dom.development.js:8206
+commitCallbacks @ react-dom.development.js:8253
+commitClassCallbacks @ react-dom.development.js:21256
+commitLayoutEffectOnFiber @ react-dom.development.js:21358
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21351
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21340
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21510
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22860
+commitLayoutEffectOnFiber @ react-dom.development.js:21370
+commitLayoutEffects @ react-dom.development.js:22846
+commitRootImpl @ react-dom.development.js:26104
+commitRoot @ react-dom.development.js:25957
+performSyncWorkOnRoot @ react-dom.development.js:24815
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+scheduler.development.js:517 [Violation]'message' handler took 197ms
+content-main.js:9021  [Sentry] You cannot use Sentry.init() in a browser extension, see: https://docs.sentry.io/platforms/javascript/best-practices/browser-extensions/
+(anônimo) @ content-main.js:9021
+consoleSandbox @ content-main.js:717
+_checkForBrowserExtension @ content-main.js:9020
+init$2 @ content-main.js:8987
+init$1 @ content-main.js:9693
+(anônimo) @ content-main.js:104849
+(anônimo) @ content-main.js:104914
+(anônimo) @ content-main.js:104922
+(anônimo) @ content-main.js:105024
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+Fetch terminou o carregamento: GET "<URL>".
+use-on-click-outside.js:27 [Violation]Added non-passive event listener to a scroll-blocking 'touchstart' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+eval @ use-on-click-outside.js:27
+commitHookEffectListMount @ react-dom.development.js:21035
+commitHookPassiveMountEffects @ react-dom.development.js:23088
+commitPassiveMountOnFiber @ react-dom.development.js:23193
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23190
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23304
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:23171
+commitPassiveMountOnFiber @ react-dom.development.js:23201
+commitPassiveMountEffects @ react-dom.development.js:23159
+flushPassiveEffectsImpl @ react-dom.development.js:26372
+flushPassiveEffects @ react-dom.development.js:26313
+commitRootImpl @ react-dom.development.js:26215
+commitRoot @ react-dom.development.js:25957
+performSyncWorkOnRoot @ react-dom.development.js:24815
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10286
+flushSyncWorkOnAllRoots @ react-dom.development.js:10246
+commitRootImpl @ react-dom.development.js:26244
+commitRoot @ react-dom.development.js:25957
+commitRootWhenReady @ react-dom.development.js:24677
+finishConcurrentRender @ react-dom.development.js:24642
+performConcurrentWorkOnRoot @ react-dom.development.js:24487
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+VM754 loader.js:280   GET https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js net::ERR_BLOCKED_BY_CLIENT
+hasAdBlocker @ VM754 loader.js:280
+onReady @ VM754 loader.js:280
+(anônimo) @ VM754 loader.js:280
+(anônimo) @ VM754 loader.js:280
+(anônimo) @ VM754 loader.js:280
+VM754 loader.js:280 Fetch falha ao carregar: GET "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js".
+hasAdBlocker @ VM754 loader.js:280
+onReady @ VM754 loader.js:280
+(anônimo) @ VM754 loader.js:280
+(anônimo) @ VM754 loader.js:280
+(anônimo) @ VM754 loader.js:280
+app.js:2 XHR terminou o carregamento: GET "chrome-extension://bpgniflghkfilpfdacibcpggobmldnlf/app.html".
+(anônimo) @ app.js:2
+e.exports @ app.js:2
+e.exports @ app.js:2
+Promise.then
+_.request @ app.js:2
+r.forEach._.<computed> @ app.js:2
+(anônimo) @ app.js:2
+to @ app.js:2
+io @ app.js:2
+await in io
+_o @ app.js:2
+await in _o
+(anônimo) @ app.js:2
+(anônimo) @ app.js:2
+(anônimo) @ app.js:2

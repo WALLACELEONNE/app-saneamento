@@ -1,0 +1,13 @@
+
+- Porta backend: 7700
+- porta frontend: 8877
+- porta banco de dados: 1521
+- Usar Docker Compose em desenvolvimento
+- Usar Docker Swarm em produção
+- Sempre verificar se as rotas retornam JSON
+- Seguir as configurações de ambiente definidas
+- Respeitar a estrutura de pastas do projeto
+- sempre validar se os novos arquivos alterados foram copiados para o docker
+- sempre matar os processos das portas corretas para pode seguir usando as portas corretas
+- "C:\Program Files\Docker\Docker\Docker Desktop.exe" caminho docker local
+- docker context use default 

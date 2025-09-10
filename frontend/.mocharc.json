@@ -1,0 +1,8 @@
+{
+  "require": ["tests/puppeteer/setup.js"],
+  "spec": "tests/puppeteer/**/*.test.js",
+  "timeout": 30000,
+  "reporter": "spec",
+  "ui": "bdd",
+  "recursive": true
+}

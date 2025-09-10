@@ -1,0 +1,63 @@
+# Dockerfile de desenvolvimento para o backend FastAPI
+FROM python:3.12
+
+# Definir variáveis de ambiente
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Instalar dependências do sistema incluindo Oracle
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    unixodbc-dev \
+    curl \
+    unzip \
+    libaio-dev \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar Oracle Instant Client (versão 23c mais recente)
+RUN mkdir -p /opt/oracle \
+    && cd /opt/oracle \
+    && curl -o instantclient-basic-linux.x64-23.5.0.24.07.zip https://download.oracle.com/otn_software/linux/instantclient/2350000/instantclient-basic-linux.x64-23.5.0.24.07.zip \
+    && unzip instantclient-basic-linux.x64-23.5.0.24.07.zip \
+    && rm instantclient-basic-linux.x64-23.5.0.24.07.zip \
+    && echo /opt/oracle/instantclient_23_5 > /etc/ld.so.conf.d/oracle-instantclient.conf \
+    && ldconfig \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libaio.so /usr/lib/x86_64-linux-gnu/libaio.so.1
+
+# Configurar variáveis de ambiente do Oracle
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_5
+ENV ORACLE_HOME=/opt/oracle/instantclient_23_5
+ENV PATH=/opt/oracle/instantclient_23_5:$PATH
+
+# Criar usuário não-root
+RUN useradd --create-home --shell /bin/bash app
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar arquivos de dependências
+COPY requirements.txt ./
+
+# Instalar dependências Python
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Copiar código da aplicação
+COPY . .
+
+# Criar diretórios necessários
+RUN mkdir -p /app/.cache /app/logs && \
+    chown -R app:app /app
+
+# Mudar para usuário não-root
+USER app
+
+# Expor porta
+EXPOSE 7700
+
+# Comando padrão (será sobrescrito no docker-compose)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7700", "--reload"]

@@ -1,0 +1,330 @@
+# Prompt para Desenvolvimento de App Web - Gestão de Saldos de Estoque
+
+## Objetivo
+Desenvolva uma aplicação web moderna, responsiva e de alto desempenho para análise e saneamento de dados de saldos de estoque, integrando os sistemas SIAGRI e CIGAM11 com banco Oracle 11g.
+
+## Stack Tecnológica
+
+### Frontend
+- **Framework**: Next.js 14 (App Router) com TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Estado**: Zustand + TanStack Query v5
+- **Tabelas**: TanStack Table v8
+- **Validação**: Zod
+- **Cache**: Next.js native cache + SWR
+
+### Backend
+- **Framework**: FastAPI + Python 3.11+
+- **Banco**: Oracle 11g (driver: python-oracledb)
+- **ORM**: SQLAlchemy 2.0 com async support
+- **Cache**: Redis
+- **Validação**: Pydantic v2
+- **Docs**: FastAPI auto-generated OpenAPI/Swagger
+
+### DevOps & Tooling
+- **Container**: Docker + Docker Compose
+- **Testing**: Pytest (backend) + Vitest (frontend)
+- **Linting**: Ruff (Python) + ESLint (TypeScript)
+- **Formatação**: Black (Python) + Prettier (TypeScript)
+
+## Arquitetura da Aplicação
+
+### Página 1 - Filtros (Homepage)
+**Arquivo**: `app/page.tsx`
+
+**Funcionalidades**:
+- Server Component para dados iniciais de filtros
+- Client Component para interatividade
+- URL search params para estado dos filtros
+- Debounce em campos de busca (300ms)
+
+**Campos de Filtro**:
+```typescript
+interface FiltrosEstoque {
+  empresa?: number;
+  grupo?: number;
+  subgrupo?: number;
+  produto?: string;
+}
+```
+
+**Componentes**:
+- `<EmpresaSelect />` - Dropdown com empresas
+- `<GrupoProdutoSelect />` - Grupos 80, 81, 83, 84
+- `<SubgrupoSelect />` - Dependente do grupo
+- `<ProdutoCombobox />` - Busca com autocomplete
+
+### Página 2 - Resultados
+**Arquivo**: `app/results/page.tsx`
+
+**Grid de Dados** (TanStack Table):
+- Empresa
+- Grupo 
+- Material (código)
+- Descrição
+- Saldo SIAGRI
+- Saldo CIGAM
+- Diferença (destacar negativo em vermelho)
+
+**Funcionalidades**:
+- Paginação server-side (50 registros/página)
+- Ordenação por coluna
+- Export Excel/CSV via Server Action
+- Click na linha abre modal
+
+### Página 3 - Detalhes do Material
+**Arquivo**: `app/results/@modal/[material]/page.tsx`
+
+**Modal Intercepted Route** com campos editáveis:
+- `DESC_PSV` (Descrição) - Input text
+- `SITU_PSV` (Status) - Toggle A/I
+
+**Server Actions** para updates otimistas.
+
+## Consulta SQL Principal
+```sql
+WITH EMPRESA (CODI_EMP) AS (
+    SELECT DISTINCT CODI_EMP FROM juparana.CADEMP
+),
+SALDO_CALCULADO AS (
+    SELECT
+        EMPRESA.CODI_EMP,
+        P.CODI_GPR,
+        p.codi_psv,
+        p.DESC_PSV,
+        p.SITU_PSV,
+        e.tipo_est,
+        COALESCE((SELECT SUM(sald_ctr) 
+                  FROM TABLE(JUPARANA.saldo_inicial_tipoest(EMPRESA.CODI_EMP, e.tipo_est, p.codi_psv, SYSDATE, 'S', NULL, NULL))), 0) AS SALDO
+    FROM JUPARANA.prodserv p
+    JOIN JUPARANA.estoque e ON e.TIPO_EST = 2
+    JOIN EMPRESA ON 1 = 1
+    WHERE p.prse_psv = 'U'
+    AND p.CODI_GPR IN (80, 81, 83, 84)
+    AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
+    AND (:grupo IS NULL OR P.CODI_GPR = :grupo)
+    AND (:produto IS NULL OR UPPER(p.DESC_PSV) LIKE UPPER('%' || :produto || '%'))
+),
+SALDO_COM_RN AS (
+    SELECT
+        'SIAGRI' AS SISTEMA,
+        SALDO_CALCULADO.CODI_EMP AS EMPRESA,
+        SALDO_CALCULADO.CODI_GPR AS GRUPO,
+        SALDO_CALCULADO.codi_psv AS MATERIAL,
+        SALDO_CALCULADO.DESC_PSV AS DESCRICAO,
+        SALDO_CALCULADO.SITU_PSV AS STATUS,
+        CAST(SALDO_CALCULADO.SALDO AS NUMBER) AS SALDO,
+        ROW_NUMBER() OVER (PARTITION BY SALDO_CALCULADO.CODI_EMP, SALDO_CALCULADO.codi_psv ORDER BY SALDO_CALCULADO.codi_psv) AS RN
+    FROM SALDO_CALCULADO
+),
+SALDO_SIAGRI AS (
+    SELECT * FROM SALDO_COM_RN WHERE RN = 1
+),
+SALDO_CIGAM AS (
+    SELECT
+        'CIGAM11' AS SISTEMA,
+        CAST(E.CD_UNIDADE_DE_N AS NUMBER) AS EMPRESA,
+        CAST(NULL AS NUMBER) AS GRUPO,
+        CAST(E.CD_MATERIAL AS VARCHAR2(15)) AS MATERIAL,
+        CAST(M.DESCRICAO AS VARCHAR2(120)) AS DESCRICAO,
+        CAST('A' AS CHAR(1)) AS STATUS,
+        CAST(E.QUANTIDADE AS NUMBER) AS SALDO
+    FROM CIGAM11.ESESTOQU E
+    JOIN CIGAM11.ESMATERI M ON E.CD_MATERIAL = M.CD_MATERIAL
+    WHERE (:empresa IS NULL OR E.CD_UNIDADE_DE_N = LPAD(:empresa, 3, '0'))
+)
+SELECT 
+    S1.EMPRESA,
+    S1.GRUPO,
+    S1.MATERIAL,
+    S1.DESCRICAO,
+    S1.STATUS,
+    S1.SALDO AS SALDO_SIAGRI,
+    COALESCE(S2.SALDO, 0) AS SALDO_CIGAM,
+    (S1.SALDO - COALESCE(S2.SALDO, 0)) AS DIFERENCA_SALDO
+FROM SALDO_SIAGRI S1
+LEFT JOIN SALDO_CIGAM S2 ON S1.MATERIAL = S2.MATERIAL
+WHERE S1.SALDO <> COALESCE(S2.SALDO, 0)
+ORDER BY S1.EMPRESA, S1.GRUPO, S1.MATERIAL
+OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY;
+```
+
+## API Endpoints (FastAPI)
+
+### Filtros
+```python
+# app/api/endpoints/filters.py
+
+@router.get("/empresas", response_model=List[EmpresaSchema])
+async def get_empresas(db: AsyncSession = Depends(get_db)):
+    query = "SELECT CODI_EMP, NOME_EMP FROM juparana.CADEMP ORDER BY NOME_EMP"
+    result = await db.execute(text(query))
+    return [{"codigo": row.CODI_EMP, "nome": row.NOME_EMP} for row in result]
+
+@router.get("/grupos", response_model=List[GrupoSchema])
+async def get_grupos():
+    return [
+        {"codigo": 80, "descricao": "Fertilizantes"},
+        {"codigo": 81, "descricao": "Defensivos"},
+        {"codigo": 83, "descricao": "Sementes"},
+        {"codigo": 84, "descricao": "Implementos"}
+    ]
+
+@router.get("/produtos/search")
+async def search_produtos(
+    q: str = Query(..., min_length=3),
+    grupo: Optional[int] = None,
+    limit: int = Query(20, le=50),
+    db: AsyncSession = Depends(get_db)
+):
+    query = """
+        SELECT DISTINCT p.codi_psv, p.DESC_PSV
+        FROM JUPARANA.prodserv p
+        WHERE UPPER(p.DESC_PSV) LIKE UPPER(:search)
+        AND (:grupo IS NULL OR p.CODI_GPR = :grupo)
+        AND p.prse_psv = 'U'
+        ORDER BY p.DESC_PSV
+        FETCH FIRST :limit ROWS ONLY
+    """
+    result = await db.execute(text(query), {
+        "search": f"%{q}%",
+        "grupo": grupo,
+        "limit": limit
+    })
+    return [{"codigo": row.codi_psv, "descricao": row.DESC_PSV} for row in result]
+```
+
+### Saldos
+```python
+@router.get("/saldos", response_model=SaldosPaginatedResponse)
+async def get_saldos(
+    params: SaldosFilters = Depends(),
+    pagination: PaginationParams = Depends(),
+    db: AsyncSession = Depends(get_db)
+):
+    # Implementar consulta principal com filtros e paginação
+    pass
+
+@router.put("/material/{codigo}", response_model=MaterialResponse)
+async def update_material(
+    codigo: str,
+    data: MaterialUpdateSchema,
+    db: AsyncSession = Depends(get_db)
+):
+    query = """
+        UPDATE JUPARANA.prodserv 
+        SET DESC_PSV = :descricao, SITU_PSV = :status
+        WHERE codi_psv = :codigo
+    """
+    await db.execute(text(query), {
+        "descricao": data.desc_psv,
+        "status": data.situ_psv,
+        "codigo": codigo
+    })
+    await db.commit()
+    return {"success": True}
+```
+
+## Schemas Pydantic
+
+```python
+# app/schemas/estoque.py
+
+class EmpresaSchema(BaseModel):
+    codigo: int
+    nome: str
+
+class SaldosFilters(BaseModel):
+    empresa: Optional[int] = None
+    grupo: Optional[int] = None
+    produto: Optional[str] = None
+
+class SaldoItemSchema(BaseModel):
+    empresa: int
+    grupo: Optional[int]
+    material: str
+    descricao: str
+    status: str
+    saldo_siagri: Decimal
+    saldo_cigam: Decimal
+    diferenca_saldo: Decimal
+
+class MaterialUpdateSchema(BaseModel):
+    desc_psv: str = Field(..., max_length=120)
+    situ_psv: Literal["A", "I"]
+```
+
+## Estrutura do Projeto
+
+```
+├── frontend/                 # Next.js 14
+│   ├── app/
+│   │   ├── page.tsx         # Filtros
+│   │   ├── results/
+│   │   │   ├── page.tsx     # Grid
+│   │   │   └── @modal/      # Modal overlay
+│   │   └── api/             # Next.js API (proxy cache)
+│   ├── components/ui/       # shadcn/ui
+│   ├── lib/
+│   │   ├── api.ts          # HTTP client
+│   │   └── schemas.ts      # Zod validations
+│   └── types/              # TypeScript types
+├── backend/                 # FastAPI
+│   ├── app/
+│   │   ├── api/endpoints/
+│   │   ├── core/           # Config, database
+│   │   ├── schemas/        # Pydantic models
+│   │   └── services/       # Business logic
+│   └── requirements.txt
+└── docker-compose.yml       # Full stack setup
+```
+
+## Requisitos de Performance
+
+1. **Database**: Connection pool (min: 5, max: 20 conexões)
+2. **Cache**: Redis para queries frequentes (TTL: 5 minutos)
+3. **Frontend**: Code splitting automático do Next.js
+4. **Paginação**: Server-side, máximo 50 registros
+5. **Debounce**: 300ms em campos de busca
+
+## Configuração Docker
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "8877:8877"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:7700
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "7700:7700"
+    environment:
+      - DATABASE_URL=oracle://user:pass@oracle:1521/xe
+      - REDIS_URL=redis://redis:6789
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6789:6789"
+```
+
+## Entregáveis
+
+1. ✅ App Next.js 14 completo e funcional
+2. ✅ API FastAPI com documentação automática
+3. ✅ Docker Compose para desenvolvimento
+4. ✅ Scripts de setup e migration
+5. ✅ Testes unitários (Vitest + Pytest)
+6. ✅ README com instruções detalhadas
+
+**Meta de Performance**: Carregamento < 2s, filtros < 500ms, navegação < 300ms.
