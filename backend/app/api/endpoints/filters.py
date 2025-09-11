@@ -303,6 +303,69 @@ async def search_produtos(
         logger.error(f"Erro ao buscar produtos com termo '{q}': {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
+@router.get("/stats")
+async def get_statistics(db: Session = Depends(get_db)):
+    """
+    Retorna estatísticas gerais do sistema (contadores de empresas e produtos)
+    """
+    cache_key = "stats:general"
+    
+    # Tenta recuperar do cache
+    cached_data = await CacheManager.get(cache_key)
+    if cached_data:
+        logger.info("Estatísticas recuperadas do cache")
+        return cached_data
+    
+    try:
+        # Conta empresas ativas
+        empresas_query = """
+            SELECT COUNT(*) as total
+            FROM juparana.CADEMP 
+            WHERE SITU_EMP = 'A'
+            and codi_emp not in (11,12,50,51)
+        """
+        
+        # Conta produtos ativos dos últimos 24 meses
+        produtos_query = """
+            WITH PERIODO AS ( 
+                SELECT 
+                TRUNC(ADD_MONTHS(TRUNC(SYSDATE, 'MM'), -23), 'MM') AS MES_INI, 
+                ADD_MONTHS(TRUNC(SYSDATE, 'MM'), 1) AS MES_FIM 
+                FROM DUAL 
+            ) 
+            SELECT COUNT(*) AS total 
+            FROM JUPARANA.PRODSERV p, PERIODO per
+            WHERE p.DINSERT IS NOT NULL
+            AND p.DINSERT >= per.MES_INI 
+            AND p.DINSERT < per.MES_FIM 
+            AND p.SITU_PSV = 'A' 
+            AND p.PRSE_PSV = 'U' 
+            AND p.CODI_GPR IN (80,81,82,83,84,85,86,87)
+        """
+        
+        # Executa as consultas
+        empresas_result = db.execute(text(empresas_query))
+        produtos_result = db.execute(text(produtos_query))
+        
+        total_empresas = empresas_result.fetchone().total
+        total_produtos = produtos_result.fetchone().total
+        
+        stats = {
+            "empresas": total_empresas,
+            "produtos": total_produtos,
+            "status": "online"
+        }
+        
+        # Armazena no cache por 10 minutos
+        await CacheManager.set(cache_key, stats, ttl=600)
+        
+        logger.info(f"Estatísticas: {total_empresas} empresas, {total_produtos} produtos")
+        return stats
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar estatísticas: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
 @router.delete("/cache")
 async def clear_filters_cache():
     """
@@ -313,6 +376,7 @@ async def clear_filters_cache():
         # Limpa caches relacionados aos filtros
         await CacheManager.clear_pattern("empresas:*")
         await CacheManager.clear_pattern("subgrupos:*")
+        await CacheManager.clear_pattern("stats:*")
         
         logger.info("Cache de filtros limpo com sucesso")
         return {"message": "Cache limpo com sucesso"}

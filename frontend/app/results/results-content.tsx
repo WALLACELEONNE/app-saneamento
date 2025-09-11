@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Eye,
+  Edit,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,7 @@ import { toast } from 'sonner';
 import { apiQueries } from '@/lib/api';
 import { formatCurrency, formatNumber, cn } from '@/lib/utils';
 import type { SaldoItem, StatusSaldo } from '@/types';
+import { EditProductModal } from '@/components/edit-product-modal';
 
 export function ResultsContent() {
   const router = useRouter();
@@ -67,6 +69,10 @@ export function ResultsContent() {
     pageIndex: 0,
     pageSize: 50,
   });
+  
+  // Estados para o modal de edição
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<SaldoItem | null>(null);
 
   /**
    * Definição das colunas da tabela
@@ -194,6 +200,15 @@ export function ResultsContent() {
             >
               <Eye className="mr-2 h-4 w-4" />
               Ver detalhes
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setSelectedProduct(saldo);
+                setEditModalOpen(true);
+              }}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Editar produto
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -569,6 +584,16 @@ export function ResultsContent() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Modal de edição */}
+      <EditProductModal
+        product={selectedProduct}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedProduct(null);
+        }}
+      />
     </div>
   );
 }
