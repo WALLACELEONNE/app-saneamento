@@ -1,0 +1,112 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img [ref=e7]
+        - heading "Sistema para Saneamento de Materiais" [level=1] [ref=e9]
+      - paragraph [ref=e10]: Configure os filtros abaixo para consultar os saldos comparativos entre os sistemas SIAGRI e CIGAM e sanear o que for necessário para o SAP
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: Empresas
+          - img [ref=e15]
+        - generic [ref=e19]:
+          - generic [ref=e20]: "15"
+          - paragraph [ref=e21]: Empresas disponíveis no sistema
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: Materiais
+          - img [ref=e25]
+        - generic [ref=e29]:
+          - generic [ref=e30]: 8,811
+          - paragraph [ref=e31]: Materiais cadastrados
+      - generic [ref=e32]:
+        - generic [ref=e34]: Status
+        - generic [ref=e36]:
+          - generic [ref=e37]: Online
+          - paragraph [ref=e38]: Sistemas SIAGRI e CIGAM conectados
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]: Filtros de Consulta
+        - generic [ref=e42]: Selecione os filtros desejados para consultar os saldos de estoque. Todos os campos são opcionais, mas pelo menos um deve ser preenchido.
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: Empresa *
+            - combobox "Empresa *" [ref=e48] [cursor=pointer]:
+              - generic: 1 - PGM
+              - img [ref=e49] [cursor=pointer]
+            - combobox [ref=e51]
+            - paragraph [ref=e52]: Selecione a empresa para consultar o estoque
+          - generic [ref=e53]:
+            - generic [ref=e54]: Grupo
+            - combobox "Grupo" [active] [ref=e55] [cursor=pointer]:
+              - generic: 80 - COMBUSTIVEIS E LUBRIFICANTES
+              - img [ref=e56] [cursor=pointer]
+            - combobox [ref=e58]
+            - paragraph [ref=e59]: Filtre por grupo de materiais (opcional)
+          - generic [ref=e60]:
+            - generic [ref=e61]: Subgrupo
+            - combobox "Subgrupo" [ref=e62] [cursor=pointer]:
+              - generic: Todos os subgrupos
+              - img [ref=e63] [cursor=pointer]
+            - combobox [ref=e65]
+            - paragraph [ref=e66]: Filtre por subgrupo de materiais (opcional)
+          - generic [ref=e67]:
+            - generic [ref=e68]: Produto
+            - combobox "Produto" [ref=e69] [cursor=pointer]:
+              - generic: Todos os materiais
+              - img [ref=e70] [cursor=pointer]
+            - combobox [ref=e72]
+            - paragraph [ref=e73]: Filtre por material específico (opcional)
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - checkbox "Mostrar apenas itens com divergências" [ref=e76] [cursor=pointer]
+            - checkbox
+            - generic [ref=e77]:
+              - generic [ref=e78]: Mostrar apenas itens com divergências
+              - paragraph [ref=e79]: Exibe somente materiais com diferenças entre SIAGRI e CIGAM
+          - generic [ref=e80]:
+            - checkbox "Mostrar apenas saldos positivos SIAGRI" [ref=e81] [cursor=pointer]
+            - checkbox
+            - generic [ref=e82]:
+              - generic [ref=e83]: Mostrar apenas saldos positivos SIAGRI
+              - paragraph [ref=e84]: Exibe somente materiais com saldo maior que zero no SIAGRI
+          - generic [ref=e85]:
+            - checkbox "Mostrar apenas saldos positivos CIGAM" [ref=e86] [cursor=pointer]
+            - checkbox
+            - generic [ref=e87]:
+              - generic [ref=e88]: Mostrar apenas saldos positivos CIGAM
+              - paragraph [ref=e89]: Exibe somente materiais com saldo maior que zero no CIGAM
+        - generic [ref=e90]:
+          - button "Consultar Saldos" [ref=e91] [cursor=pointer]:
+            - img
+            - text: Consultar Saldos
+          - button "Limpar Filtros" [ref=e92] [cursor=pointer]:
+            - img
+            - text: Limpar Filtros
+    - generic [ref=e93]:
+      - generic [ref=e94]:
+        - generic [ref=e96]: Como usar
+        - generic [ref=e97]:
+          - paragraph [ref=e98]: 1. Selecione a empresa desejada (obrigatório)
+          - paragraph [ref=e99]: 2. Escolha o grupo de materiais (opcional)
+          - paragraph [ref=e100]: 3. Refine com subgrupo e material específico
+          - paragraph [ref=e101]: 4. Clique em "Consultar Saldos" para ver os resultados
+      - generic [ref=e102]:
+        - generic [ref=e104]: Sobre o Sistema
+        - generic [ref=e105]:
+          - paragraph [ref=e106]: Este sistema permite comparar os saldos de estoque entre os sistemas SIAGRI e CIGAM em tempo real.
+          - paragraph [ref=e107]: Os dados são atualizados automaticamente e incluem informações detalhadas sobre divergências entre os sistemas.
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e108]:
+    - img [ref=e110]
+    - button "Open Tanstack query devtools" [ref=e178] [cursor=pointer]:
+      - img [ref=e179] [cursor=pointer]
+  - alert [ref=e247]
+```

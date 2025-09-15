@@ -18,8 +18,15 @@ class EmpresaSchema(BaseModel):
     WHERE SITU_EMP = 'A'
     ORDER BY IDEN_EMP
     """
-    codigo: int = Field(..., description="Código da empresa")
+    codigo: int = Field(..., description="Código da empresa (codi_emp)")
     nome: str = Field(..., description="Nome da empresa")
+    # Campo id para compatibilidade com frontend (usa código como string)
+    id: str = Field(..., description="ID da empresa (código como string)")
+    
+    def __init__(self, **data):
+        if 'id' not in data and 'codigo' in data:
+            data['id'] = str(data['codigo'])
+        super().__init__(**data)
 
 class GrupoSchema(BaseModel):
     """
@@ -29,8 +36,19 @@ class GrupoSchema(BaseModel):
     AND SITU_GPR = 'A'
     ORDER BY CODI_GPR
     """
-    codigo: int = Field(..., description="Código do grupo")
+    codigo: int = Field(..., description="Código do grupo (codi_gpr)")
     descricao: str = Field(..., description="Descrição do grupo")
+    # Campo id para compatibilidade com frontend (usa código como string)
+    id: str = Field(..., description="ID do grupo (código como string)")
+    # Campo nome para compatibilidade com frontend (usa descrição)
+    nome: str = Field(..., description="Nome do grupo (descrição)")
+    
+    def __init__(self, **data):
+        if 'id' not in data and 'codigo' in data:
+            data['id'] = str(data['codigo'])
+        if 'nome' not in data and 'descricao' in data:
+            data['nome'] = data['descricao']
+        super().__init__(**data)
 
 class SubgrupoSchema(BaseModel):
     """
@@ -42,10 +60,21 @@ class SubgrupoSchema(BaseModel):
     AND SITU_SBG = 'A'
     ORDER BY DESC_SBG
     """
-    codigo: int = Field(..., description="Código do subgrupo")
+    codigo: int = Field(..., description="Código do subgrupo (codi_sbg)")
     descricao: str = Field(..., description="Descrição do subgrupo")
+    # Campo id para compatibilidade com frontend (usa código como string)
+    id: str = Field(..., description="ID do subgrupo (código como string)")
+    # Campo nome para compatibilidade com frontend (usa descrição)
+    nome: str = Field(..., description="Nome do subgrupo (descrição)")
+    
+    def __init__(self, **data):
+        if 'id' not in data and 'codigo' in data:
+            data['id'] = str(data['codigo'])
+        if 'nome' not in data and 'descricao' in data:
+            data['nome'] = data['descricao']
+        super().__init__(**data)
 
-class ProdutoSchema(BaseModel):
+class MaterialSchema(BaseModel):
     """
     SELECT DISTINCT 
         p.codi_psv as codigo, 
@@ -58,8 +87,19 @@ class ProdutoSchema(BaseModel):
     AND (:subgrupo IS NULL OR p.CODI_SBG = :subgrupo)
     ORDER BY p.DESC_PSV FETCH FIRST :limit ROWS ONLY
     """
-    codigo: str = Field(..., description="Código do produto")
-    descricao: str = Field(..., description="Descrição do produto")
+    codigo: str = Field(..., description="Código do material (codi_psv)")
+    descricao: str = Field(..., description="Descrição do material")
+    # Campo id para compatibilidade com frontend (usa código como string)
+    id: str = Field(..., description="ID do material (código como string)")
+    # Campo nome para compatibilidade com frontend (usa descrição)
+    nome: str = Field(..., description="Nome do material (descrição)")
+    
+    def __init__(self, **data):
+        if 'id' not in data and 'codigo' in data:
+            data['id'] = str(data['codigo'])
+        if 'nome' not in data and 'descricao' in data:
+            data['nome'] = data['descricao']
+        super().__init__(**data)
 
 class SaldosFilters(BaseModel):
     """
@@ -136,9 +176,12 @@ class SaldosFilters(BaseModel):
     OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
     """
     empresa: Optional[int] = Field(None, description="Código da empresa")
-    grupo: Optional[int] = Field(None, description="Código do grupo de produtos")
+    grupo: Optional[int] = Field(None, description="Código do grupo de materiais")
     subgrupo: Optional[int] = Field(None, description="Código do subgrupo de materiais")
     material: Optional[str] = Field(None, min_length=3, description="Termo de busca para material")
+    apenas_divergentes: Optional[bool] = Field(False, description="Mostrar apenas itens com divergências")
+    saldos_positivos_siagri: Optional[bool] = Field(False, description="Mostrar apenas saldos positivos SIAGRI")
+    saldos_positivos_cigam: Optional[bool] = Field(False, description="Mostrar apenas saldos positivos CIGAM")
 
 class PaginationParams(BaseModel):
     """
@@ -157,13 +200,24 @@ class SaldoItemSchema(BaseModel):
     Schema para item de saldo no grid de resultados
     """
     empresa: Optional[int] = Field(None, description="Código da empresa")
+    empresa_codigo: Optional[str] = Field(None, description="Código da empresa como string")
+    empresa_descricao: Optional[str] = Field(None, description="Descrição da empresa")
     grupo: Optional[int] = Field(None, description="Código do grupo")
+    grupo_codigo: Optional[str] = Field(None, description="Código do grupo como string")
+    grupo_descricao: Optional[str] = Field(None, description="Descrição do grupo")
     material: str = Field(..., description="Código do material")
     descricao: str = Field(..., description="Descrição do material")
     status: StatusMaterial = Field(..., description="Status do material (A/I)")
     saldo_siagri: Decimal = Field(..., description="Saldo no sistema SIAGRI")
     saldo_cigam: Decimal = Field(..., description="Saldo no sistema CIGAM")
     diferenca_saldo: Decimal = Field(..., description="Diferença entre os saldos")
+    # Campos adicionais para o modal de edição
+    tipo_item: Optional[str] = Field(None, description="Tipo do item")
+    tipo_material: Optional[str] = Field(None, description="Tipo do material (P/S)")
+    codigo_grupo: Optional[int] = Field(None, description="Código do grupo")
+    codigo_subgrupo: Optional[int] = Field(None, description="Código do subgrupo")
+    unidade: Optional[str] = Field(None, description="Unidade de medida")
+    ncm_cla_fiscal: Optional[str] = Field(None, description="NCM/Classificação Fiscal")
     
     class Config:
         from_attributes = True
@@ -196,9 +250,24 @@ class SaldosPaginatedResponse(BaseModel):
 class MaterialUpdateSchema(BaseModel):
     """
     Schema para atualização de material
+    Tipos validados conforme especificação do banco de dados:
+    P.CODI_GPR -- NUMBER
+    P.CODI_PSV -- STRING
+    P.CODI_SBG -- NUMBER
+    P.CODI_TIP -- NUMBER
+    P.DESC_PSV -- STRING
+    P.PRSE_PSV -- STRING
+    P.SITU_PSV -- STRING
+    P.UNID_PSV -- STRING
     """
-    desc_psv: str = Field(..., max_length=120, description="Nova descrição do material")
-    situ_psv: StatusMaterial = Field(..., description="Novo status do material")
+    desc_psv: str = Field(..., max_length=120, description="P.DESC_PSV -- STRING: Descrição do material")
+    situ_psv: StatusMaterial = Field(..., description="P.SITU_PSV -- STRING: Status do material (A/I)")
+    unid_psv: str = Field(..., max_length=10, description="P.UNID_PSV -- STRING: Unidade do material (obrigatório)")
+    codi_cfp: Optional[str] = Field(None, max_length=8, description="Código de classificação fiscal (opcional)")
+    codi_gpr: Optional[int] = Field(None, description="P.CODI_GPR -- NUMBER: Código do grupo")
+    codi_sbg: Optional[int] = Field(None, description="P.CODI_SBG -- NUMBER: Código do subgrupo")
+    codi_tip: Optional[int] = Field(None, description="P.CODI_TIP -- NUMBER: Código do tipo")
+    prse_psv: Optional[str] = Field(None, max_length=1, description="P.PRSE_PSV -- STRING: Produto/Serviço")
 
 class MaterialResponse(BaseModel):
     """
@@ -208,12 +277,12 @@ class MaterialResponse(BaseModel):
     message: Optional[str] = Field(None, description="Mensagem adicional")
     data: Optional[dict] = Field(None, description="Dados adicionais")
 
-class SearchProdutosResponse(BaseModel):
+class SearchMateriaisResponse(BaseModel):
     """
-    Schema para resposta da busca de produtos
+    Schema para resposta da busca de materiais
     """
-    items: List[ProdutoSchema] = Field(..., description="Lista de produtos encontrados")
-    total: int = Field(..., description="Total de produtos encontrados")
+    items: List[MaterialSchema] = Field(..., description="Lista de materiais encontrados")
+    total: int = Field(..., description="Total de materiais encontrados")
 
 class HealthCheckResponse(BaseModel):
     """

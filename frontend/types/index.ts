@@ -7,7 +7,7 @@ export enum TipoFiltro {
   EMPRESA = 'empresa',
   GRUPO = 'grupo',
   SUBGRUPO = 'subgrupo',
-  PRODUTO = 'produto',
+  MATERIAL = 'material',
 }
 
 export enum StatusSaldo {
@@ -19,24 +19,29 @@ export enum StatusSaldo {
 export interface BaseEntity {
   id: string;
   nome: string;
-  codigo?: string;
 }
 
 export interface Empresa extends BaseEntity {
+  codigo: number; // codi_emp
   cnpj?: string;
   ativa: boolean;
 }
 
 export interface Grupo extends BaseEntity {
-  descricao?: string;
+  codigo: number; // codi_gpr
+  descricao: string;
 }
 
 export interface Subgrupo extends BaseEntity {
+  codigo: number; // codi_sbg
+  descricao: string;
   grupo_id: string;
   grupo_nome?: string;
 }
 
-export interface Produto extends BaseEntity {
+export interface Material extends BaseEntity {
+  codigo: string; // codi_psv
+  descricao: string;
   grupo_id?: string;
   subgrupo_id?: string;
   unidade?: string;
@@ -48,9 +53,11 @@ export interface FiltrosEstoque {
   empresa_id?: string;
   grupo_id?: string;
   subgrupo_id?: string;
-  produto_id?: string;
+  material_id?: string;
   status?: StatusSaldo;
   apenas_divergentes?: boolean;
+  saldos_positivos_siagri?: boolean;
+  saldos_positivos_cigam?: boolean;
 }
 
 // Interfaces para saldos
@@ -63,6 +70,13 @@ export interface SaldoItem {
   saldo_siagri: number;
   saldo_cigam: number;
   diferenca_saldo: number;
+  // Novos campos para edição
+  tipo_item?: string;
+  tipo_material?: string;
+  codigo_grupo?: number;
+  codigo_subgrupo?: number;
+  unidade?: string;
+  ncm_cla_fiscal?: string;
 }
 
 export interface SaldoResponse {
@@ -83,16 +97,25 @@ export interface PaginationParams {
 
 // Interface para atualização de material
 export interface AtualizarMaterial {
-  produto_id: string;
-  empresa_id: string;
-  novo_saldo_siagri?: number;
-  novo_saldo_cigam?: number;
+  material_id: string; // P.CODI_PSV -- STRING
+  empresa_id: string; // Convertido para string para consistência
+  novo_saldo_siagri: number;
+  novo_saldo_cigam: number;
   observacoes?: string;
+  // Campos editáveis - tipos validados conforme banco de dados
+  desc_psv: string; // P.DESC_PSV -- STRING
+  unid_psv: string; // P.UNID_PSV -- STRING (obrigatório)
+  situ_psv: 'A' | 'I'; // P.SITU_PSV -- STRING
+  codi_cfp?: string; // P.CODI_CFP -- STRING (opcional)
+  codi_gpr?: number; // P.CODI_GPR -- NUMBER
+  codi_sbg?: number; // P.CODI_SBG -- NUMBER
+  codi_tip?: number; // P.CODI_TIP -- NUMBER
+  prse_psv?: string; // P.PRSE_PSV -- STRING
 }
 
 // Interface para detalhes do material
 export interface DetalheMaterial {
-  produto: Produto;
+  material: Material;
   empresa: Empresa;
   saldo_siagri: number;
   saldo_cigam: number;
@@ -133,8 +156,10 @@ export interface FormFilters {
   empresa_id: string;
   grupo_id?: string;
   subgrupo_id?: string;
-  produto_id?: string;
+  material_id?: string;
   apenas_divergentes: boolean;
+  saldos_positivos_siagri: boolean;
+  saldos_positivos_cigam: boolean;
 }
 
 // Tipos para API responses
@@ -185,7 +210,7 @@ export interface UseFiltersReturn {
   empresas: Empresa[];
   grupos: Grupo[];
   subgrupos: Subgrupo[];
-  produtos: Produto[];
+  materiais: Material[];
   isLoading: boolean;
   error: string | null;
   refetch: () => void;

@@ -14,7 +14,7 @@ import { getStatistics } from '@/lib/api';
 
 /**
  * Página inicial da aplicação com formulário de filtros
- * Permite ao usuário selecionar empresa, grupo, subgrupo e produto
+ * Permite ao usuário selecionar empresa, grupo, subgrupo e material
  * para consultar os saldos comparativos entre SIAGRI e CIGAM
  */
 export default function HomePage() {
@@ -30,7 +30,7 @@ export default function HomePage() {
       <div className="page-header">
         <div className="flex items-center gap-2">
           <Filter className="h-8 w-8 text-primary" />
-          <h1 className="page-title">Sistema para Saneamento de Produtos</h1>
+          <h1 className="page-title">Sistema para Saneamento de Materiais</h1>
         </div>
         <p className="page-description">
           Configure os filtros abaixo para consultar os saldos comparativos
@@ -61,10 +61,10 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Card de informações sobre produtos */}
+        {/* Card de informações sobre materiais */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Produtos</CardTitle>
+            <CardTitle className="text-sm font-medium">Materiais</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -74,11 +74,11 @@ export default function HomePage() {
               ) : error ? (
                 '---'
               ) : (
-                stats?.produtos?.toLocaleString() || '0'
+                stats?.materiais?.toLocaleString() || '0'
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Produtos cadastrados
+              Materiais cadastrados
             </p>
           </CardContent>
         </Card>
@@ -136,10 +136,10 @@ export default function HomePage() {
               1. Selecione a empresa desejada (obrigatório)
             </p>
             <p className="text-sm text-muted-foreground">
-              2. Escolha o grupo de produtos (opcional)
+              2. Escolha o grupo de materiais (opcional)
             </p>
             <p className="text-sm text-muted-foreground">
-              3. Refine com subgrupo e produto específico
+              3. Refine com subgrupo e material específico
             </p>
             <p className="text-sm text-muted-foreground">
               4. Clique em "Consultar Saldos" para ver os resultados

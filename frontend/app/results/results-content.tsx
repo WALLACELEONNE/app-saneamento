@@ -162,11 +162,11 @@ export function ResultsContent() {
       const statusSaldo = status as StatusSaldo;
       
       const statusConfig = {
-        [StatusSaldo.ATIVO]: { label: 'OK', variant: 'default' as const, icon: CheckCircle },
-        [StatusSaldo.INATIVO]: { label: 'Divergente', variant: 'destructive' as const, icon: AlertTriangle },
+        'A': { label: 'OK', variant: 'default' as const, icon: CheckCircle },
+        'I': { label: 'Divergente', variant: 'destructive' as const, icon: AlertTriangle },
       };
       
-      const config = statusConfig[statusSaldo] || statusConfig[StatusSaldo.ATIVO];
+      const config = statusConfig[statusSaldo] || statusConfig['A'];
       const Icon = config.icon;
       
       return (
@@ -195,7 +195,7 @@ export function ResultsContent() {
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => {
-                router.push(`/material/${saldo.material || saldo.id}`);
+                router.push(`/material/${saldo.material}`);
               }}
             >
               <Eye className="mr-2 h-4 w-4" />
@@ -230,7 +230,20 @@ export function ResultsContent() {
   const filters = useMemo(() => {
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => {
-      if (value) params[key] = value;
+      if (value) {
+        // Mapeia os parâmetros da URL para o formato esperado pela API
+        if (key === 'empresa') {
+          params.empresa_id = value;
+        } else if (key === 'grupo') {
+          params.grupo_id = value;
+        } else if (key === 'subgrupo') {
+          params.subgrupo_id = value;
+        } else if (key === 'material') {
+          params.material_id = value;
+        } else {
+          params[key] = value;
+        }
+      }
     });
     return params;
   }, [searchParams]);
@@ -241,13 +254,11 @@ export function ResultsContent() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: apiQueries.keys.saldos({
-      ...filters,
+    queryKey: apiQueries.keys.saldos(filters, {
       page: pagination.pageIndex + 1,
       size: pagination.pageSize,
     }),
-    queryFn: () => apiQueries.saldos({
-      ...filters,
+    queryFn: () => apiQueries.saldos(filters, {
       page: pagination.pageIndex + 1,
       size: pagination.pageSize,
     }),
@@ -280,10 +291,11 @@ export function ResultsContent() {
     
     const items = saldosData.items;
     const total = items.length;
-    const divergentes = items.filter(item => item.status === 'divergente').length;
-    const apenas_siagri = items.filter(item => item.status === 'apenas_siagri').length;
-    const apenas_cigam = items.filter(item => item.status === 'apenas_cigam').length;
-    const ok = items.filter(item => item.status === 'igual').length;
+    const divergentes = items.filter(item => item.status === 'I').length;
+    const ok = items.filter(item => item.status === 'A').length;
+    // Calcular divergências baseadas nos saldos
+    const apenas_siagri = items.filter(item => item.saldo_siagri > 0 && item.saldo_cigam === 0).length;
+    const apenas_cigam = items.filter(item => item.saldo_cigam > 0 && item.saldo_siagri === 0).length;
     
     return { total, divergentes, apenas_siagri, apenas_cigam, ok };
   }, [saldosData]);

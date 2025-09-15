@@ -37,13 +37,15 @@ const filtersSchema = z.object({
   empresa_id: z.string().min(1, 'Selecione uma empresa'),
   grupo_id: z.string().optional(),
   subgrupo_id: z.string().optional(),
-  produto_id: z.string().optional(),
+  material_id: z.string().optional(),
   apenas_divergentes: z.boolean().default(false),
+  saldos_positivos_siagri: z.boolean().default(false),
+  saldos_positivos_cigam: z.boolean().default(false),
 });
 
 /**
  * Componente de formulário para filtros de estoque
- * Permite selecionar empresa, grupo, subgrupo, produto e opções adicionais
+ * Permite selecionar empresa, grupo, subgrupo, material e opções adicionais
  */
 export function FiltersForm() {
   const router = useRouter();
@@ -58,8 +60,10 @@ export function FiltersForm() {
       empresa_id: '',
       grupo_id: '',
       subgrupo_id: '',
-      produto_id: '',
+      material_id: '',
       apenas_divergentes: false,
+      saldos_positivos_siagri: false,
+      saldos_positivos_cigam: false,
     },
   });
 
@@ -104,13 +108,13 @@ export function FiltersForm() {
     grupo_id: selectedGrupo || ''
   }));
 
-  const { data: produtosRaw = [], isLoading: loadingProdutos } = useQuery({
-    queryKey: apiQueries.keys.produtos({
+  const { data: materiaisRaw = [], isLoading: loadingMateriais } = useQuery({
+    queryKey: apiQueries.keys.materiais({
       empresa_id: selectedEmpresa,
       grupo_id: selectedGrupo,
       subgrupo_id: selectedSubgrupo,
     }),
-    queryFn: () => apiQueries.produtos({
+    queryFn: () => apiQueries.materiais({
       empresa_id: selectedEmpresa,
       grupo_id: selectedGrupo,
       subgrupo_id: selectedSubgrupo,
@@ -118,11 +122,11 @@ export function FiltersForm() {
     enabled: !!selectedEmpresa,
   });
 
-  // Mapeia os dados dos produtos da API para o formato esperado pelo frontend
-  const produtos = produtosRaw.map((produto: any) => ({
-    id: produto.codigo?.toString() || '',
-    nome: produto.descricao || '',
-    codigo: produto.codigo?.toString() || '',
+  // Mapeia os dados dos materiais da API para o formato esperado pelo frontend
+  const materiais = materiaisRaw.map((material: any) => ({
+    id: material.codigo?.toString() || '',
+    nome: material.descricao || '',
+    codigo: material.codigo?.toString() || '',
     grupo_id: selectedGrupo || '',
     subgrupo_id: selectedSubgrupo || '',
     ativo: true
@@ -133,7 +137,7 @@ export function FiltersForm() {
     if (selectedEmpresa) {
       form.setValue('grupo_id', '');
       form.setValue('subgrupo_id', '');
-      form.setValue('produto_id', '');
+      form.setValue('material_id', '');
       setSelectedGrupo('');
       setSelectedSubgrupo('');
     }
@@ -142,14 +146,14 @@ export function FiltersForm() {
   useEffect(() => {
     if (selectedGrupo) {
       form.setValue('subgrupo_id', '');
-      form.setValue('produto_id', '');
+      form.setValue('material_id', '');
       setSelectedSubgrupo('');
     }
   }, [selectedGrupo, form]);
 
   useEffect(() => {
     if (selectedSubgrupo) {
-      form.setValue('produto_id', '');
+      form.setValue('material_id', '');
     }
   }, [selectedSubgrupo, form]);
 
@@ -209,7 +213,7 @@ export function FiltersForm() {
                       .filter((empresa) => empresa.id && empresa.id.trim() !== '')
                       .map((empresa) => (
                         <SelectItem key={`empresa-${empresa.id}`} value={empresa.id}>
-                          {empresa.nome}
+                          {empresa.codigo} - {empresa.nome}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -247,13 +251,13 @@ export function FiltersForm() {
                       .filter((grupo) => grupo.id && grupo.id.trim() !== '')
                       .map((grupo) => (
                         <SelectItem key={`grupo-${grupo.id}`} value={grupo.id}>
-                          {grupo.nome}
+                          {grupo.codigo} - {grupo.nome}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Filtre por grupo de produtos (opcional)
+                  Filtre por grupo de materiais (opcional)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -285,13 +289,13 @@ export function FiltersForm() {
                       .filter((subgrupo) => subgrupo.id && subgrupo.id.trim() !== '')
                       .map((subgrupo) => (
                         <SelectItem key={`subgrupo-${subgrupo.id}`} value={subgrupo.id}>
-                          {subgrupo.nome}
+                          {subgrupo.codigo} - {subgrupo.nome}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Filtre por subgrupo de produtos (opcional)
+                  Filtre por subgrupo de materiais (opcional)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -301,33 +305,32 @@ export function FiltersForm() {
           {/* Seleção de Produto */}
           <FormField
             control={form.control}
-            name="produto_id"
+            name="material_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Produto</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value || undefined}
-                  disabled={!selectedEmpresa || loadingProdutos}
+                  disabled={!selectedEmpresa || loadingMateriais}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos os produtos" />
+                      <SelectValue placeholder="Todos os materiais" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {produtos
-                      .filter((produto) => produto.id && produto.id.trim() !== '')
-                      .map((produto) => (
-                        <SelectItem key={`produto-${produto.id}`} value={produto.id}>
-                          {produto.codigo ? `${produto.codigo} - ` : ''}
-                          {produto.nome}
+                    {materiais
+                      .filter((material) => material.id && material.id.trim() !== '')
+                      .map((material) => (
+                        <SelectItem key={`material-${material.id}`} value={material.id}>
+                          {material.codigo} - {material.nome}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Filtre por produto específico (opcional)
+                  Filtre por material específico (opcional)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -353,7 +356,53 @@ export function FiltersForm() {
                     Mostrar apenas itens com divergências
                   </FormLabel>
                   <FormDescription>
-                    Exibe somente produtos com diferenças entre SIAGRI e CIGAM
+                    Exibe somente materiais com diferenças entre SIAGRI e CIGAM
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="saldos_positivos_siagri"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Mostrar apenas saldos positivos SIAGRI
+                  </FormLabel>
+                  <FormDescription>
+                    Exibe somente materiais com saldo maior que zero no SIAGRI
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="saldos_positivos_cigam"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Mostrar apenas saldos positivos CIGAM
+                  </FormLabel>
+                  <FormDescription>
+                    Exibe somente materiais com saldo maior que zero no CIGAM
                   </FormDescription>
                 </div>
               </FormItem>

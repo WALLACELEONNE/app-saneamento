@@ -60,7 +60,7 @@ class EstoqueService:
     
     @staticmethod
     async def get_grupos(db: AsyncSession) -> List[Dict[str, Any]]:
-        """Obtém lista de grupos de produtos"""
+        """Obtém lista de grupos de materiais"""
         cache_key = "grupos:list"
         
         # Tenta recuperar do cache
@@ -72,7 +72,7 @@ class EstoqueService:
             # Usa o modelo SQLAlchemy para buscar grupos específicos
             stmt = (
                 select(Grupo.codigo, Grupo.descricao)
-                .where(Grupo.codigo.in_([80, 81, 83, 84]))
+                .where(Grupo.codigo.in_([80, 81, 83, 84, 85, 86, 87]))
                 .order_by(Grupo.descricao)
             )
             
@@ -94,16 +94,16 @@ class EstoqueService:
             raise
     
     @staticmethod
-    async def search_produtos(
+    async def search_materiais(
         db: AsyncSession, 
         termo: str, 
         limit: int = 20
     ) -> List[Dict[str, Any]]:
-        """Busca produtos por termo"""
+        """Busca materiais por termo"""
         if len(termo) < 3:
             return []
         
-        cache_key = f"produtos:search:{termo}:{limit}"
+        cache_key = f"materiais:search:{termo}:{limit}"
         
         # Tenta recuperar do cache
         cached_data = await CacheManager.get(cache_key)
@@ -111,7 +111,7 @@ class EstoqueService:
             return cached_data
         
         try:
-            # Usa o modelo SQLAlchemy para buscar produtos
+            # Usa o modelo SQLAlchemy para buscar materiais
             stmt = (
                 select(
                     Produto.codigo,
@@ -121,8 +121,8 @@ class EstoqueService:
                 )
                 .where(
                     and_(
-                        Produto.tipo == 'U',  # Produtos únicos
-                        Produto.codigo_grupo.in_([80, 81, 83, 84]),
+                        Produto.tipo == 'U',  # Materiais únicos
+                        Produto.codigo_grupo.in_([80, 81, 83, 84, 85, 86, 87]),
                         func.upper(Produto.descricao).like(func.upper(f'%{termo}%'))
                     )
                 )
@@ -133,7 +133,7 @@ class EstoqueService:
             result = await db.execute(stmt)
             rows = result.fetchall()
             
-            produtos = [
+            materiais = [
                 {
                     "codigo": row.codigo,
                     "descricao": row.descricao,
@@ -144,12 +144,12 @@ class EstoqueService:
             ]
             
             # Armazena no cache por 30 minutos
-            await CacheManager.set(cache_key, produtos, ttl=1800)
+            await CacheManager.set(cache_key, materiais, ttl=1800)
             
-            return produtos
+            return materiais
             
         except Exception as e:
-            logger.error(f"Erro ao buscar produtos: {e}")
+            logger.error(f"Erro ao buscar materiais: {e}")
             raise
     
     @staticmethod
@@ -183,10 +183,10 @@ class EstoqueService:
                     JOIN JUPARANA.estoque e ON e.TIPO_EST = 2
                     JOIN EMPRESA ON 1 = 1
                     WHERE p.prse_psv = 'U'
-                    AND p.CODI_GPR IN (80, 81, 83, 84)
+                    AND p.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
                     AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
                     AND (:grupo IS NULL OR P.CODI_GPR = :grupo)
-                    AND (:produto IS NULL OR UPPER(p.DESC_PSV) LIKE UPPER('%' || :produto || '%'))
+                    AND (:material IS NULL OR UPPER(p.DESC_PSV) LIKE UPPER('%' || :material || '%'))
                 ),
                 SALDO_COM_RN AS (
                     SELECT
@@ -227,9 +227,17 @@ class EstoqueService:
                     S1.STATUS,
                     S1.SALDO AS SALDO_SIAGRI,
                     COALESCE(S2.SALDO, 0) AS SALDO_CIGAM,
-                    (S1.SALDO - COALESCE(S2.SALDO, 0)) AS DIFERENCA_SALDO
+                    (S1.SALDO - COALESCE(S2.SALDO, 0)) AS DIFERENCA_SALDO,
+                    -- Campos adicionais para o modal
+                    P.CODI_TIP AS TIPO_ITEM,
+                    P.PRSE_PSV AS TIPO_MATERIAL,
+                    P.CODI_GPR AS CODIGO_GRUPO,
+                    P.CODI_SBG AS CODIGO_SUBGRUPO,
+                    P.UNID_PSV AS UNIDADE,
+                    P.CODI_CFP AS NCM_CLA_FISCAL
                 FROM SALDO_SIAGRI S1
                 LEFT JOIN SALDO_CIGAM S2 ON S1.MATERIAL = S2.MATERIAL
+                LEFT JOIN JUPARANA.prodserv P ON S1.MATERIAL = P.CODI_PSV
                 WHERE S1.SALDO <> COALESCE(S2.SALDO, 0)
                 ORDER BY S1.EMPRESA, S1.GRUPO, S1.MATERIAL
                 OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
@@ -254,10 +262,10 @@ class EstoqueService:
                     FROM JUPARANA.prodserv p
                     JOIN EMPRESA ON 1 = 1
                     WHERE p.prse_psv = 'U'
-                    AND p.CODI_GPR IN (80, 81, 83, 84)
+                    AND p.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
                     AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
                     AND (:grupo IS NULL OR P.CODI_GPR = :grupo)
-                    AND (:produto IS NULL OR UPPER(p.DESC_PSV) LIKE UPPER('%' || :produto || '%'))
+                    AND (:material IS NULL OR UPPER(p.DESC_PSV) LIKE UPPER('%' || :material || '%'))
                 ),
                 SALDO_COM_RN AS (
                     SELECT
@@ -290,7 +298,7 @@ class EstoqueService:
             params = {
                 "empresa": filters.empresa,
                 "grupo": filters.grupo,
-                "produto": filters.produto,
+                "material": filters.material,
                 "offset": pagination.offset,
                 "limit": pagination.size
             }
@@ -313,7 +321,14 @@ class EstoqueService:
                     status=StatusMaterial(row.STATUS),
                     saldo_siagri=Decimal(str(row.SALDO_SIAGRI)),
                     saldo_cigam=Decimal(str(row.SALDO_CIGAM)),
-                    diferenca_saldo=Decimal(str(row.DIFERENCA_SALDO))
+                    diferenca_saldo=Decimal(str(row.DIFERENCA_SALDO)),
+                    # Campos adicionais para o modal
+                    tipo_item=getattr(row, 'TIPO_ITEM', None),
+                    tipo_material=getattr(row, 'TIPO_MATERIAL', None),
+                    codigo_grupo=getattr(row, 'CODIGO_GRUPO', None),
+                    codigo_subgrupo=getattr(row, 'CODIGO_SUBGRUPO', None),
+                    unidade=getattr(row, 'UNIDADE', None),
+                    ncm_cla_fiscal=getattr(row, 'NCM_CLA_FISCAL', None)
                 )
                 items.append(item)
             
@@ -332,25 +347,25 @@ class EstoqueService:
     ) -> bool:
         """Atualiza material no banco usando modelo SQLAlchemy"""
         try:
-            # Busca o produto pelo código
+            # Busca o material pelo código
             stmt = select(Produto).where(Produto.codigo == codigo)
             result = await db.execute(stmt)
-            produto = result.scalar_one_or_none()
+            material = result.scalar_one_or_none()
             
-            if not produto:
-                logger.warning(f"Produto {codigo} não encontrado")
-                return False
-            
+            if not material:
+                logger.warning(f"Material {codigo} não encontrado")
+                return None
+
             # Atualiza os campos
-            produto.descricao = descricao
-            produto.situacao = status.value
+            material.descricao = descricao
+            material.situacao = status.value
             
             # Salva as alterações
             await db.commit()
             
             # Limpa cache relacionado
             await CacheManager.clear_pattern("saldos:*")
-            await CacheManager.clear_pattern("produtos:*")
+            await CacheManager.clear_pattern("materiais:*")
             
             logger.info(f"Material {codigo} atualizado com sucesso")
             return True

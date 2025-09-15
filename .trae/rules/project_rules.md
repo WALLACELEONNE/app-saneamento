@@ -2,6 +2,7 @@
 - Porta backend: 7700
 - porta frontend: 8877
 - porta banco de dados: 1521
+- porta Redis 6789
 - Usar Docker Compose em desenvolvimento
 - Usar Docker Swarm em produção
 - Sempre verificar se as rotas retornam JSON
@@ -11,3 +12,6 @@
 - sempre matar os processos das portas corretas para pode seguir usando as portas corretas
 - "C:\Program Files\Docker\Docker\Docker Desktop.exe" caminho docker local
 - docker context use default 
+- Não usar dados mock no projeto
+- Não usar dados de teste no projeto
+- Sempre verificar se as rotas retornam JSON

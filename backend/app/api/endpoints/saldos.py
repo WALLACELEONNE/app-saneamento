@@ -30,6 +30,9 @@ async def get_saldos(
     grupo: Optional[int] = Query(None, description="Código do grupo"),
     subgrupo: Optional[int] = Query(None, description="Código do subgrupo"),
     material: Optional[str] = Query(None, min_length=3, description="Termo de busca do material"),
+    apenas_divergentes: Optional[bool] = Query(False, description="Mostrar apenas itens com divergências"),
+    saldos_positivos_siagri: Optional[bool] = Query(False, description="Mostrar apenas saldos positivos SIAGRI"),
+    saldos_positivos_cigam: Optional[bool] = Query(False, description="Mostrar apenas saldos positivos CIGAM"),
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(50, ge=1, le=100, description="Tamanho da página"),
     db: Session = Depends(get_db)
@@ -41,7 +44,15 @@ async def get_saldos(
     print("DEBUG: FUNÇÃO GET_SALDOS INICIADA!")
     
     # Cria objetos de filtro e paginação
-    filters = SaldosFilters(empresa=empresa, grupo=grupo, subgrupo=subgrupo, material=material)
+    filters = SaldosFilters(
+        empresa=empresa, 
+        grupo=grupo, 
+        subgrupo=subgrupo, 
+        material=material, 
+        apenas_divergentes=apenas_divergentes,
+        saldos_positivos_siagri=saldos_positivos_siagri,
+        saldos_positivos_cigam=saldos_positivos_cigam
+    )
     pagination = PaginationParams(page=page, size=size)
     print(f"DEBUG: Filtros criados: {filters}")
     print(f"DEBUG: Paginação criada: {pagination}")
@@ -82,50 +93,51 @@ async def get_saldos(
     
     # Query principal com CTEs para cálculo real dos saldos
     query_saldos = """
-        WITH EMPRESA (CODI_EMP) AS (
-    SELECT DISTINCT CODI_EMP FROM juparana.CADEMP
+WITH EMPRESA (CODI_EMP) AS (
+    SELECT DISTINCT CODI_EMP FROM JUPARANA.CADEMP
 ),
 SALDO_CALCULADO AS (
     SELECT
         EMPRESA.CODI_EMP,
         P.CODI_GPR,
-        p.codi_psv,
-        p.DESC_PSV,
-        p.SITU_PSV,
-        e.tipo_est,
+        P.CODI_SBG,                           -- Propaga SUBGRUPO
+        P.CODI_PSV,
+        P.DESC_PSV,
+        P.SITU_PSV,
         COALESCE((
-            SELECT SUM(sald_ctr) 
-            FROM TABLE(JUPARANA.saldo_inicial_tipoest(
-                EMPRESA.CODI_EMP, e.tipo_est, p.codi_psv, SYSDATE, 'S', NULL, NULL
+            SELECT SUM(SALD_CTR)
+            FROM TABLE(JUPARANA.SALDO_INICIAL_TIPOEST(
+                EMPRESA.CODI_EMP, 2, P.CODI_PSV, SYSDATE, 'S', NULL, NULL
             ))
         ), 0) AS SALDO
-    FROM JUPARANA.prodserv p
-    JOIN JUPARANA.estoque e ON e.TIPO_EST = 2
+    FROM JUPARANA.PRODSERV P
     JOIN EMPRESA ON 1 = 1
-    WHERE p.prse_psv = 'U'
-    AND p.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
-    AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
-    AND (:grupo IS NULL OR P.CODI_GPR = :grupo)
-    AND (:subgrupo IS NULL OR P.CODI_SBG = :subgrupo)
-    AND (:material IS NULL OR p.codi_psv = :material)
+    WHERE P.PRSE_PSV = 'U'
+      AND P.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
+      AND (:empresa  IS NULL OR EMPRESA.CODI_EMP = :empresa)
+      AND (:grupo    IS NULL OR P.CODI_GPR      = :grupo)
+      AND (:subgrupo IS NULL OR P.CODI_SBG      = :subgrupo)
+      AND (:material IS NULL OR P.CODI_PSV      = :material)
 ),
 SALDO_COM_RN AS (
     SELECT
         'SIAGRI' AS SISTEMA,
-        SALDO_CALCULADO.CODI_EMP AS EMPRESA,
-        SALDO_CALCULADO.CODI_GPR AS GRUPO,
-        SALDO_CALCULADO.codi_psv AS MATERIAL,
-        SALDO_CALCULADO.DESC_PSV AS DESCRICAO,
+        SC.CODI_EMP                        AS EMPRESA,        -- numérico
+        LPAD(TO_CHAR(SC.CODI_EMP), 3, '0') AS EMPRESA_PAD,    -- padronizado p/ join (001=1)
+        SC.CODI_GPR                        AS GRUPO,
+        SC.CODI_SBG                        AS SUBGRUPO,
+        SC.CODI_PSV                        AS MATERIAL,
+        SC.DESC_PSV                        AS DESCRICAO,
         CASE 
-            WHEN TRIM(SALDO_CALCULADO.SITU_PSV) IN ('I', 'A') THEN TRIM(SALDO_CALCULADO.SITU_PSV)
+            WHEN TRIM(SC.SITU_PSV) IN ('I', 'A') THEN TRIM(SC.SITU_PSV)
             ELSE 'A'
         END AS STATUS,
-        CAST(SALDO_CALCULADO.SALDO AS NUMBER) AS SALDO,
+        CAST(SC.SALDO AS NUMBER)           AS SALDO,
         ROW_NUMBER() OVER (
-            PARTITION BY SALDO_CALCULADO.CODI_EMP, SALDO_CALCULADO.codi_psv 
-            ORDER BY SALDO_CALCULADO.codi_psv
+            PARTITION BY SC.CODI_EMP, SC.CODI_PSV 
+            ORDER BY SC.CODI_PSV
         ) AS RN
-    FROM SALDO_CALCULADO
+    FROM SALDO_CALCULADO SC
 ),
 SALDO_SIAGRI AS (
     SELECT * FROM SALDO_COM_RN WHERE RN = 1
@@ -133,59 +145,200 @@ SALDO_SIAGRI AS (
 SALDO_CIGAM AS (
     SELECT
         'CIGAM11' AS SISTEMA,
-        CAST(E.CD_UNIDADE_DE_N AS NUMBER) AS EMPRESA,
-        CAST(NULL AS NUMBER) AS GRUPO,
-        CAST(E.CD_MATERIAL AS VARCHAR2(15)) AS MATERIAL,
-        CAST(M.DESCRICAO AS VARCHAR2(120)) AS DESCRICAO,
-        CAST('A' AS CHAR(1)) AS STATUS,
-        CAST(E.QUANTIDADE AS NUMBER) AS SALDO
+        -- EMPRESA padronizada (3 dígitos) para casar com SIAGRI
+        LPAD(TO_CHAR(TRIM(E.CD_UNIDADE_DE_N)), 3, '0') AS EMPRESA_PAD,
+        CAST(NULL AS NUMBER)                 AS EMPRESA,   -- placeholder p/ coalesce no final
+        CAST(NULL AS NUMBER)                 AS GRUPO,     -- CIGAM não possui grupo
+        CAST(NULL AS NUMBER)                 AS SUBGRUPO,  -- CIGAM não possui subgrupo
+        CAST(E.CD_MATERIAL AS VARCHAR2(15))  AS MATERIAL,
+        CAST(M.DESCRICAO AS VARCHAR2(120))   AS DESCRICAO,
+        CAST('A' AS CHAR(1))                 AS STATUS,
+        CAST(E.QUANTIDADE AS NUMBER)         AS SALDO
     FROM CIGAM11.ESESTOQU E
     JOIN CIGAM11.ESMATERI M ON E.CD_MATERIAL = M.CD_MATERIAL
-    WHERE (:empresa IS NULL OR E.CD_UNIDADE_DE_N = :empresa)
-    AND (:material IS NULL OR E.CD_MATERIAL = :material)
+    WHERE (:empresa  IS NULL OR LPAD(TO_CHAR(TRIM(E.CD_UNIDADE_DE_N)), 3, '0') = LPAD(TO_CHAR(:empresa), 3, '0'))
+      AND (:material IS NULL OR E.CD_MATERIAL = :material)
 ),
 RESULTADO_FINAL AS (
     SELECT 
-        COALESCE(S.EMPRESA, C.EMPRESA) AS EMPRESA,
-        COALESCE(S.GRUPO, C.GRUPO) AS GRUPO,
-        COALESCE(S.MATERIAL, C.MATERIAL) AS MATERIAL,
+        /* EMPRESA numérica na saída: se vier do SIAGRI usa S.EMPRESA; se vier só do CIGAM, converte '001' -> 1 */
+        COALESCE(S.EMPRESA, TO_NUMBER(C.EMPRESA_PAD)) AS EMPRESA,
+        COALESCE(S.GRUPO,     C.GRUPO)     AS GRUPO,      -- C.GRUPO é NULL
+        COALESCE(S.SUBGRUPO,  C.SUBGRUPO)  AS SUBGRUPO,   -- C.SUBGRUPO é NULL
+        COALESCE(S.MATERIAL,  C.MATERIAL)  AS MATERIAL,
         COALESCE(S.DESCRICAO, C.DESCRICAO) AS DESCRICAO,
-        COALESCE(S.STATUS, C.STATUS) AS STATUS,
-        COALESCE(S.SALDO, 0) AS SALDO_SIAGRI,
-        COALESCE(C.SALDO, 0) AS SALDO_CIGAM,
+        COALESCE(S.STATUS,    C.STATUS)    AS STATUS,
+        COALESCE(S.SALDO, 0)               AS SALDO_SIAGRI,
+        COALESCE(C.SALDO, 0)               AS SALDO_CIGAM,
         (COALESCE(S.SALDO, 0) - COALESCE(C.SALDO, 0)) AS DIFERENCA_SALDO
     FROM SALDO_SIAGRI S
-    FULL OUTER JOIN SALDO_CIGAM C ON S.EMPRESA = C.EMPRESA AND S.MATERIAL = C.MATERIAL
+    FULL OUTER JOIN SALDO_CIGAM C
+      ON S.MATERIAL    = C.MATERIAL
+     AND S.EMPRESA_PAD = C.EMPRESA_PAD
 )
 SELECT * FROM (
+    SELECT 
+        t.GRUPO,
+        t.MATERIAL,
+        t.DESCRICAO,
+        t.STATUS,
+        t.SALDO_SIAGRI,
+        t.SALDO_CIGAM,
+        t.DIFERENCA_SALDO,
+        ROW_NUMBER() OVER (ORDER BY t.EMPRESA ASC, t.MATERIAL) AS RN
+    FROM (
+        SELECT DISTINCT
+            EMPRESA,
+            GRUPO,
+            SUBGRUPO,
+            MATERIAL,
+            DESCRICAO,
+            STATUS,
+            SALDO_SIAGRI,
+            SALDO_CIGAM,
+            DIFERENCA_SALDO
+        FROM RESULTADO_FINAL
+        WHERE 
+            (:apenas_divergentes = 0 OR (:apenas_divergentes = 1 AND ABS(DIFERENCA_SALDO) > 0))
+            AND (:saldos_positivos_siagri = 0 OR (:saldos_positivos_siagri = 1 AND SALDO_SIAGRI > 0))
+            AND (:saldos_positivos_cigam  = 0 OR (:saldos_positivos_cigam  = 1 AND SALDO_CIGAM  > 0))
+            AND (:grupo    IS NULL OR GRUPO    = :grupo)
+            AND (:subgrupo IS NULL OR SUBGRUPO = :subgrupo)
+            AND (
+                  (:saldos_positivos_siagri = 1 AND SALDO_SIAGRI > SALDO_CIGAM)
+               OR (:saldos_positivos_cigam  = 1 AND SALDO_CIGAM  > SALDO_SIAGRI)
+               OR (:saldos_positivos_siagri = 1 AND :saldos_positivos_cigam = 1 AND (:apenas_divergentes = 0 OR SALDO_SIAGRI <> SALDO_CIGAM))
+               OR (:saldos_positivos_siagri = 0 AND :saldos_positivos_cigam = 0)
+            )
+    ) t
+) 
+WHERE RN > :offset 
+  AND RN <= (:offset + :limit)
+    """
+        
+    # Query de contagem que replica a lógica da query principal
+    query_count = """
+        WITH EMPRESA (CODI_EMP) AS (
+    SELECT DISTINCT CODI_EMP FROM JUPARANA.CADEMP
+),
+SALDO_CALCULADO AS (
+    SELECT
+        EMPRESA.CODI_EMP,
+        P.CODI_GPR,
+        P.CODI_SBG,                           -- Propaga SUBGRUPO
+        P.CODI_PSV,
+        P.DESC_PSV,
+        P.SITU_PSV,
+        COALESCE((
+            SELECT SUM(SALD_CTR)
+            FROM TABLE(JUPARANA.SALDO_INICIAL_TIPOEST(
+                EMPRESA.CODI_EMP, 2, P.CODI_PSV, SYSDATE, 'S', NULL, NULL
+            ))
+        ), 0) AS SALDO
+    FROM JUPARANA.PRODSERV P
+    JOIN EMPRESA ON 1 = 1
+    WHERE P.PRSE_PSV = 'U'
+      AND P.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
+      AND (:empresa  IS NULL OR EMPRESA.CODI_EMP = :empresa)
+      AND (:grupo    IS NULL OR P.CODI_GPR      = :grupo)
+      AND (:subgrupo IS NULL OR P.CODI_SBG      = :subgrupo)
+      AND (:material IS NULL OR P.CODI_PSV      = :material)
+),
+SALDO_COM_RN AS (
+    SELECT
+        'SIAGRI' AS SISTEMA,
+        SC.CODI_EMP                        AS EMPRESA,        -- numérico
+        LPAD(TO_CHAR(SC.CODI_EMP), 3, '0') AS EMPRESA_PAD,    -- padronizado p/ join (001=1)
+        SC.CODI_GPR                        AS GRUPO,
+        SC.CODI_SBG                        AS SUBGRUPO,
+        SC.CODI_PSV                        AS MATERIAL,
+        SC.DESC_PSV                        AS DESCRICAO,
+        CASE 
+            WHEN TRIM(SC.SITU_PSV) IN ('I', 'A') THEN TRIM(SC.SITU_PSV)
+            ELSE 'A'
+        END AS STATUS,
+        CAST(SC.SALDO AS NUMBER)           AS SALDO,
+        ROW_NUMBER() OVER (
+            PARTITION BY SC.CODI_EMP, SC.CODI_PSV 
+            ORDER BY SC.CODI_PSV
+        ) AS RN
+    FROM SALDO_CALCULADO SC
+),
+SALDO_SIAGRI AS (
+    SELECT * FROM SALDO_COM_RN WHERE RN = 1
+),
+SALDO_CIGAM AS (
+    SELECT
+        'CIGAM11' AS SISTEMA,
+        -- EMPRESA padronizada (3 dígitos) para casar com SIAGRI
+        LPAD(TO_CHAR(TRIM(E.CD_UNIDADE_DE_N)), 3, '0') AS EMPRESA_PAD,
+        CAST(NULL AS NUMBER)                 AS EMPRESA,   -- placeholder p/ coalesce no final
+        CAST(NULL AS NUMBER)                 AS GRUPO,     -- CIGAM não possui grupo
+        CAST(NULL AS NUMBER)                 AS SUBGRUPO,  -- CIGAM não possui subgrupo
+        CAST(E.CD_MATERIAL AS VARCHAR2(15))  AS MATERIAL,
+        CAST(M.DESCRICAO AS VARCHAR2(120))   AS DESCRICAO,
+        CAST('A' AS CHAR(1))                 AS STATUS,
+        CAST(E.QUANTIDADE AS NUMBER)         AS SALDO
+    FROM CIGAM11.ESESTOQU E
+    JOIN CIGAM11.ESMATERI M ON E.CD_MATERIAL = M.CD_MATERIAL
+    WHERE (:empresa  IS NULL OR LPAD(TO_CHAR(TRIM(E.CD_UNIDADE_DE_N)), 3, '0') = LPAD(TO_CHAR(:empresa), 3, '0'))
+      AND (:material IS NULL OR E.CD_MATERIAL = :material)
+),
+RESULTADO_FINAL AS (
+    SELECT 
+        /* EMPRESA numérica na saída: se vier do SIAGRI usa S.EMPRESA; se vier só do CIGAM, converte '001' -> 1 */
+        COALESCE(S.EMPRESA, TO_NUMBER(C.EMPRESA_PAD)) AS EMPRESA,
+        COALESCE(S.GRUPO,     C.GRUPO)     AS GRUPO,      -- C.GRUPO é NULL
+        COALESCE(S.SUBGRUPO,  C.SUBGRUPO)  AS SUBGRUPO,   -- C.SUBGRUPO é NULL
+        COALESCE(S.MATERIAL,  C.MATERIAL)  AS MATERIAL,
+        COALESCE(S.DESCRICAO, C.DESCRICAO) AS DESCRICAO,
+        COALESCE(S.STATUS,    C.STATUS)    AS STATUS,
+        COALESCE(S.SALDO, 0)               AS SALDO_SIAGRI,
+        COALESCE(C.SALDO, 0)               AS SALDO_CIGAM,
+        (COALESCE(S.SALDO, 0) - COALESCE(C.SALDO, 0)) AS DIFERENCA_SALDO
+    FROM SALDO_SIAGRI S
+    FULL OUTER JOIN SALDO_CIGAM C
+      ON S.MATERIAL    = C.MATERIAL
+     AND S.EMPRESA_PAD = C.EMPRESA_PAD
+)
+SELECT COUNT(*) AS TOTAL
+FROM (
     SELECT DISTINCT
         EMPRESA,
         GRUPO,
+        SUBGRUPO,
         MATERIAL,
         DESCRICAO,
         STATUS,
         SALDO_SIAGRI,
         SALDO_CIGAM,
-        DIFERENCA_SALDO,
-        ROW_NUMBER() OVER (ORDER BY EMPRESA ASC, MATERIAL) AS RN
+        DIFERENCA_SALDO
     FROM RESULTADO_FINAL
-) WHERE RN > :offset AND RN <= (:offset + :limit)
-    """
-        
-    # Query de contagem simplificada para ser compatível com a query principal
-    query_count = """
-        WITH EMPRESA (CODI_EMP) AS (
-            SELECT DISTINCT CODI_EMP FROM juparana.CADEMP
+    WHERE 
+        -- Divergências (se =1, exige diferença; se =0, permite igualdade)
+        (:apenas_divergentes = 0 OR (:apenas_divergentes = 1 AND ABS(DIFERENCA_SALDO) > 0))
+
+        -- Positividade de saldos individuais (se =1, exige >0)
+        AND (:saldos_positivos_siagri = 0 OR (:saldos_positivos_siagri = 1 AND SALDO_SIAGRI > 0))
+        AND (:saldos_positivos_cigam  = 0 OR (:saldos_positivos_cigam  = 1 AND SALDO_CIGAM  > 0))
+
+        -- Replicação de filtros de GRUPO/SUBGRUPO também para CIGAM (pós-join)
+        AND (:grupo    IS NULL OR GRUPO    = :grupo)
+        AND (:subgrupo IS NULL OR SUBGRUPO = :subgrupo)
+
+        -- >>> Lógica de "vantagem" conforme seleção dos parâmetros <<<
+        AND (
+              -- Se pediu positivos do SIAGRI, retorna casos onde SIAGRI está em vantagem
+              (:saldos_positivos_siagri = 1 AND SALDO_SIAGRI > SALDO_CIGAM)
+           OR -- Se pediu positivos do CIGAM, retorna casos onde CIGAM está em vantagem
+              (:saldos_positivos_cigam  = 1 AND SALDO_CIGAM  > SALDO_SIAGRI)
+           OR -- Se ambos = 1, aceita ambos os lados (e, se não for apenas divergentes, também igualdade)
+              (:saldos_positivos_siagri = 1 AND :saldos_positivos_cigam = 1 AND (:apenas_divergentes = 0 OR SALDO_SIAGRI <> SALDO_CIGAM))
+           OR -- Se ambos = 0, não filtra por vantagem (comportamento original)
+              (:saldos_positivos_siagri = 0 AND :saldos_positivos_cigam = 0)
         )
-        SELECT COUNT(*) as total
-        FROM JUPARANA.prodserv p
-        JOIN EMPRESA ON 1 = 1
-        WHERE p.prse_psv = 'U'
-        AND p.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
-        AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
-        AND (:grupo IS NULL OR p.CODI_GPR = :grupo)
-        AND (:subgrupo IS NULL OR p.CODI_SBG = :subgrupo)
-        AND (:material IS NULL OR p.codi_psv = :material)
+) X
+
     """
         
     # Parâmetros da consulta (usando os já preparados)
@@ -194,6 +347,9 @@ SELECT * FROM (
         "grupo": filters.grupo,
         "subgrupo": filters.subgrupo,
         "material": filters.material,
+        "apenas_divergentes": 1 if filters.apenas_divergentes else 0,
+        "saldos_positivos_siagri": 1 if filters.saldos_positivos_siagri else 0,
+        "saldos_positivos_cigam": 1 if filters.saldos_positivos_cigam else 0,
         "offset": offset,
         "limit": limit
     }

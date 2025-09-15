@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "Resultados da Consulta" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Saldos de estoque comparados entre SIAGRI e CIGAM
+      - button "Nova Consulta" [ref=e9] [cursor=pointer]:
+        - img
+        - text: Nova Consulta
+    - generic [ref=e10]:
+      - generic [ref=e12]: Filtros Aplicados
+      - generic [ref=e14]:
+        - generic [ref=e15]: "empresa_id: 1"
+        - generic [ref=e16]: "grupo_id: 80"
+        - generic [ref=e17]: "apenas_divergentes: false"
+        - generic [ref=e18]: "saldos_positivos_siagri: false"
+        - generic [ref=e19]: "saldos_positivos_cigam: false"
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Saldos de Estoque
+        - generic [ref=e25]: Comparação detalhada entre os sistemas SIAGRI e CIGAM
+      - generic [ref=e26]:
+        - button "Exportar CSV" [disabled]:
+          - img
+          - text: Exportar CSV
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e39]:
+    - img [ref=e41]
+    - button "Open Tanstack query devtools" [ref=e109] [cursor=pointer]:
+      - img [ref=e110] [cursor=pointer]
+  - generic:
+    - generic [ref=e180] [cursor=pointer]:
+      - img [ref=e181] [cursor=pointer]
+      - generic [ref=e183] [cursor=pointer]: 1 error
+      - button "Hide Errors" [ref=e184] [cursor=pointer]:
+        - img [ref=e185] [cursor=pointer]
+    - status [ref=e188]:
+      - generic [ref=e189]:
+        - img [ref=e191]
+        - generic [ref=e193]:
+          - text: Static route
+          - button "Hide static indicator" [ref=e194] [cursor=pointer]:
+            - img [ref=e195] [cursor=pointer]
+  - alert [ref=e198]
+```

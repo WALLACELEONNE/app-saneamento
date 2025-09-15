@@ -9,11 +9,29 @@ from ...schemas import (
     EmpresaSchema,
     GrupoSchema,
     SubgrupoSchema,
-    ProdutoSchema,
-    SearchProdutosResponse
+    MaterialSchema,
+    SearchMateriaisResponse
 )
 
 router = APIRouter(prefix="/filters", tags=["Filtros"])
+
+@router.post("/clear-cache")
+async def clear_filters_cache():
+    """Limpa o cache dos filtros para forçar atualização dos dados"""
+    try:
+        # Limpa cache de empresas
+        await CacheManager.delete("empresas:all")
+        
+        # Limpa cache de grupos (todas as páginas)
+        for page in range(1, 11):  # Limpa até 10 páginas
+            for size in [50, 100]:
+                await CacheManager.delete(f"grupos:page:{page}:size:{size}")
+        
+        logger.info("Cache dos filtros limpo com sucesso")
+        return {"message": "Cache limpo com sucesso", "status": "ok"}
+    except Exception as e:
+        logger.error(f"Erro ao limpar cache: {e}")
+        return {"message": "Erro ao limpar cache", "status": "error"}
 
 @router.get("/empresas", response_model=List[EmpresaSchema])
 async def get_empresas(db: Session = Depends(get_db)):
@@ -30,19 +48,25 @@ async def get_empresas(db: Session = Depends(get_db)):
         return [EmpresaSchema(**item) for item in cached_data["data"]]
     
     try:
-        # Consulta no banco Oracle
+        # Consulta no banco Oracle - apenas empresas que têm dados na consulta de saldos
         query = """
-            SELECT CODI_EMP as codigo, IDEN_EMP as nome 
-            FROM juparana.CADEMP 
-            WHERE SITU_EMP = 'A'
-            ORDER BY IDEN_EMP
+            SELECT DISTINCT E.CODI_EMP as codigo, E.IDEN_EMP as nome 
+            FROM juparana.CADEMP E
+            WHERE E.SITU_EMP = 'A'
+            AND EXISTS (
+                SELECT 1 FROM juparana.prodserv P
+                WHERE P.prse_psv = 'U'
+                AND P.SITU_PSV = 'A'
+                AND P.CODI_GPR IN (80, 81, 82, 83, 84, 85, 86, 87)
+            )
+            ORDER BY E.CODI_EMP ASC
         """
         
         result = db.execute(text(query))
         rows = result.fetchall()
         
         empresas = [
-            EmpresaSchema(codigo=row.codigo, nome=row.nome)
+            EmpresaSchema(codigo=row.codigo, nome=row.nome, id=str(row.codigo))
             for row in rows
         ]
         
@@ -64,7 +88,7 @@ async def get_grupos(
     db: Session = Depends(get_db)
 ):
     """
-    Retorna grupos de produtos com paginação para melhor performance
+    Retorna grupos de materiais com paginação para melhor performance
     """
     cache_key = f"grupos:page:{page}:size:{size}"
     
@@ -78,20 +102,28 @@ async def get_grupos(
         # Calcula offset para paginação
         offset = (page - 1) * size
         
-        # Consulta grupos no banco Oracle (simplificada para teste)
+        # Consulta grupos no banco Oracle - apenas grupos que têm dados na consulta de saldos
         query = """
-            SELECT CODI_GPR as codigo, DESC_GPR as descricao
-            FROM juparana.GRUPO
-            WHERE CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
-            AND SITU_GPR = 'A'
-            ORDER BY CODI_GPR
+            SELECT DISTINCT G.CODI_GPR as codigo, G.DESC_GPR as descricao
+            FROM juparana.GRUPO G
+            INNER JOIN juparana.prodserv P ON G.CODI_GPR = P.CODI_GPR
+            WHERE G.CODI_GPR IN (80, 81, 82, 83, 84, 85, 86, 87)
+            AND G.SITU_GPR = 'A'
+            AND P.prse_psv = 'U'
+            AND P.SITU_PSV = 'A'
+            ORDER BY G.CODI_GPR
         """
         
         result = db.execute(text(query))
         rows = result.fetchall()
         
         grupos = [
-            GrupoSchema(codigo=row.codigo, descricao=row.descricao)
+            GrupoSchema(
+                codigo=row.codigo, 
+                descricao=row.descricao,
+                id=str(row.codigo),
+                nome=row.descricao
+            )
             for row in rows
         ]
         
@@ -128,18 +160,24 @@ async def get_subgrupos(
         # Calcula offset para paginação
         offset = (page - 1) * size
         
-        # Consulta subgrupos no banco com paginação usando ROWNUM
+        # Consulta subgrupos no banco com paginação usando ROWNUM - apenas subgrupos com materiais ativos
         query = """
-            SELECT * FROM (
-                SELECT DISTINCT 
-                    CODI_SBG as codigo,
-                    DESC_SBG as descricao,
-                    ROWNUM as rn
-                FROM juparana.subgrupo
-                WHERE CODI_GPR = :grupo
-                AND SITU_SBG = 'A'
-                ORDER BY DESC_SBG
-            ) WHERE rn > :offset AND rn <= :limit
+            SELECT codigo, descricao FROM (
+                SELECT 
+                    S.CODI_SBG as codigo,
+                    S.DESC_SBG as descricao,
+                    ROW_NUMBER() OVER (ORDER BY S.CODI_SBG) as rn
+                FROM juparana.subgrupo S
+                WHERE S.CODI_GPR = :grupo
+                AND S.SITU_SBG = 'A'
+                AND EXISTS (
+                    SELECT 1 FROM juparana.prodserv P 
+                    WHERE P.CODI_SBG = S.CODI_SBG 
+                    AND P.CODI_GPR = S.CODI_GPR
+                    AND P.prse_psv = 'U'
+                    AND P.SITU_PSV = 'A'
+                )
+            )
         """
         
         limit = offset + size
@@ -151,7 +189,12 @@ async def get_subgrupos(
         rows = result.fetchall()
         
         subgrupos = [
-            SubgrupoSchema(codigo=row.codigo, descricao=row.descricao)
+            SubgrupoSchema(
+                codigo=row.codigo, 
+                descricao=row.descricao,
+                id=str(row.codigo),
+                nome=row.descricao
+            )
             for row in rows
         ]
         
@@ -166,8 +209,8 @@ async def get_subgrupos(
         logger.error(f"Erro ao buscar subgrupos do grupo {grupo} página {page}: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
-@router.get("/produtos", response_model=List[ProdutoSchema])
-async def get_produtos(
+@router.get("/materiais", response_model=List[MaterialSchema])
+async def get_materiais(
     empresa_id: Optional[int] = Query(None, description="Código da empresa"),
     grupo_id: Optional[int] = Query(None, description="Código do grupo"),
     subgrupo_id: Optional[int] = Query(None, description="Código do subgrupo"),
@@ -176,10 +219,10 @@ async def get_produtos(
     db: Session = Depends(get_db)
 ):
     """
-    Retorna produtos baseados nos filtros selecionados com paginação
+    Retorna materiais baseados nos filtros selecionados com paginação
     """
     # Monta a chave do cache baseada nos filtros e paginação
-    cache_parts = ["produtos"]
+    cache_parts = ["materiais"]
     if empresa_id:
         cache_parts.append(f"empresa:{empresa_id}")
     if grupo_id:
@@ -193,37 +236,38 @@ async def get_produtos(
     # Tenta recuperar do cache
     cached_data = await CacheManager.get(cache_key)
     if cached_data and "data" in cached_data:
-        logger.info(f"Produtos recuperados do cache: {cache_key}")
-        return [ProdutoSchema(**item) for item in cached_data["data"]]
+        logger.info(f"Materiais recuperados do cache: {cache_key}")
+        return [MaterialSchema(**item) for item in cached_data["data"]]
     
     try:
         # Calcula offset para paginação
         offset = (page - 1) * size
         
-        # Consulta produtos no banco com paginação usando ROWNUM
-        query = """
+        # Consulta materiais no banco com paginação usando ROWNUM - apenas materiais dos grupos corretos
+        base_where = "WHERE p.prse_psv = 'U' AND p.SITU_PSV = 'A' AND p.CODI_GPR IN (80, 81, 82, 83, 84, 85, 86, 87)"
+        
+        params = {"offset": offset}
+        
+        # Adiciona filtros condicionais
+        if grupo_id is not None:
+            base_where += " AND p.CODI_GPR = :grupo_id"
+            params["grupo_id"] = grupo_id
+            
+        if subgrupo_id is not None:
+            base_where += " AND p.CODI_SBG = :subgrupo_id"
+            params["subgrupo_id"] = subgrupo_id
+        
+        query = f"""
             SELECT * FROM (
                 SELECT DISTINCT 
                     p.codi_psv as codigo,
                     p.DESC_PSV as descricao,
                     ROWNUM as rn
                 FROM JUPARANA.prodserv p
-                WHERE p.prse_psv = 'U'
-                AND p.SITU_PSV = 'A'
+                {base_where}
+                ORDER BY p.DESC_PSV
+            ) WHERE rn > :offset AND rn <= :limit
         """
-        
-        params = {"offset": offset}
-        
-        # Adiciona filtros condicionais
-        if grupo_id is not None:
-            query += " AND p.CODI_GPR = :grupo_id"
-            params["grupo_id"] = grupo_id
-            
-        if subgrupo_id is not None:
-            query += " AND p.CODI_SBG = :subgrupo_id"
-            params["subgrupo_id"] = subgrupo_id
-        
-        query += " ORDER BY p.DESC_PSV) WHERE rn > :offset AND rn <= :limit"
         
         limit = offset + size
         params["limit"] = limit
@@ -231,24 +275,29 @@ async def get_produtos(
         result = db.execute(text(query), params)
         rows = result.fetchall()
         
-        produtos = [
-            ProdutoSchema(codigo=row.codigo, descricao=row.descricao)
+        materiais = [
+            MaterialSchema(
+                codigo=row.codigo, 
+                descricao=row.descricao,
+                id=str(row.codigo),
+                nome=row.descricao
+            )
             for row in rows
         ]
         
         # Armazena no cache por 5 minutos
-        produtos_dict = [produto.model_dump() for produto in produtos]
-        await CacheManager.set(cache_key, {"data": produtos_dict}, ttl=300)
+        materiais_dict = [material.model_dump() for material in materiais]
+        await CacheManager.set(cache_key, {"data": materiais_dict}, ttl=300)
         
-        logger.info(f"Encontrados {len(produtos)} produtos na página {page} com filtros aplicados")
-        return produtos
+        logger.info(f"Encontrados {len(materiais)} materiais na página {page} com filtros aplicados")
+        return materiais
         
     except Exception as e:
-        logger.error(f"Erro ao buscar produtos página {page}: {e}")
+        logger.error(f"Erro ao buscar materiais página {page}: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
-@router.get("/produtos/search", response_model=SearchProdutosResponse)
-async def search_produtos(
+@router.get("/materiais/search", response_model=SearchMateriaisResponse)
+async def search_materiais(
     q: str = Query(..., min_length=3, description="Termo de busca (mínimo 3 caracteres)"),
     grupo: Optional[int] = Query(None, description="Filtrar por grupo"),
     subgrupo: Optional[int] = Query(None, description="Filtrar por subgrupo"),
@@ -256,19 +305,21 @@ async def search_produtos(
     db: Session = Depends(get_db)
 ):
     """
-    Busca produtos por termo com autocomplete
+    Busca materiais por termo com autocomplete
     Suporta filtros por grupo e subgrupo
     """
     try:
-        # Monta a query dinamicamente baseada nos filtros
+        # Monta a query dinamicamente baseada nos filtros - apenas materiais dos grupos corretos
         query = """
-            SELECT DISTINCT 
-                p.codi_psv as codigo, 
-                p.DESC_PSV as descricao
-            FROM JUPARANA.prodserv p
-            WHERE UPPER(p.DESC_PSV) LIKE UPPER(:search)
-            AND p.prse_psv = 'U'
-            AND p.SITU_PSV = 'A'
+            SELECT * FROM (
+                SELECT DISTINCT 
+                    p.codi_psv as codigo, 
+                    p.DESC_PSV as descricao
+                FROM JUPARANA.prodserv p
+                WHERE UPPER(p.DESC_PSV) LIKE UPPER(:search)
+                AND p.prse_psv = 'U'
+                AND p.SITU_PSV = 'A'
+                AND p.CODI_GPR IN (80, 81, 82, 83, 84, 85, 86, 87)
         """
         
         params = {"search": f"%{q}%", "limit": limit}
@@ -287,26 +338,31 @@ async def search_produtos(
         result = db.execute(text(query), params)
         rows = result.fetchall()
         
-        produtos = [
-            ProdutoSchema(codigo=row.codigo, descricao=row.descricao)
+        materiais = [
+            MaterialSchema(
+                codigo=row.codigo, 
+                descricao=row.descricao,
+                id=str(row.codigo),
+                nome=row.descricao
+            )
             for row in rows
         ]
         
-        logger.info(f"Encontrados {len(produtos)} produtos para busca '{q}'")
+        logger.info(f"Encontrados {len(materiais)} materiais para busca '{q}'")
         
-        return SearchProdutosResponse(
-            items=produtos,
-            total=len(produtos)
+        return SearchMateriaisResponse(
+            items=materiais,
+            total=len(materiais)
         )
         
     except Exception as e:
-        logger.error(f"Erro ao buscar produtos com termo '{q}': {e}")
+        logger.error(f"Erro ao buscar materiais com termo '{q}': {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 @router.get("/stats")
 async def get_statistics(db: Session = Depends(get_db)):
     """
-    Retorna estatísticas gerais do sistema (contadores de empresas e produtos)
+    Retorna estatísticas gerais do sistema (contadores de empresas e materiais)
     """
     cache_key = "stats:general"
     
@@ -325,8 +381,8 @@ async def get_statistics(db: Session = Depends(get_db)):
             and codi_emp not in (11,12,50,51)
         """
         
-        # Conta produtos ativos dos últimos 24 meses
-        produtos_query = """
+        # Conta materiais ativos dos últimos 24 meses
+        materiais_query = """
             WITH PERIODO AS ( 
                 SELECT 
                 TRUNC(ADD_MONTHS(TRUNC(SYSDATE, 'MM'), -23), 'MM') AS MES_INI, 
@@ -345,21 +401,21 @@ async def get_statistics(db: Session = Depends(get_db)):
         
         # Executa as consultas
         empresas_result = db.execute(text(empresas_query))
-        produtos_result = db.execute(text(produtos_query))
+        materiais_result = db.execute(text(materiais_query))
         
         total_empresas = empresas_result.fetchone().total
-        total_produtos = produtos_result.fetchone().total
+        total_materiais = materiais_result.fetchone().total
         
         stats = {
             "empresas": total_empresas,
-            "produtos": total_produtos,
+            "materiais": total_materiais,
             "status": "online"
         }
         
         # Armazena no cache por 10 minutos
         await CacheManager.set(cache_key, stats, ttl=600)
         
-        logger.info(f"Estatísticas: {total_empresas} empresas, {total_produtos} produtos")
+        logger.info(f"Estatísticas: {total_empresas} empresas, {total_materiais} materiais")
         return stats
         
     except Exception as e:

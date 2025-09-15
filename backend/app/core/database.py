@@ -21,17 +21,21 @@ class Base(DeclarativeBase):
     """
     pass
 
-# Engine síncrono do SQLAlchemy com pool de conexões
+# Engine síncrono do SQLAlchemy com pool de conexões otimizado
 engine = create_engine(
     settings.oracle_url,
-    poolclass=NullPool,  # Usar NullPool para evitar problemas de conexão
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+    pool_timeout=settings.db_pool_timeout,
+    pool_pre_ping=True,  # Verifica conexões antes de usar
+    pool_recycle=3600,   # Recicla conexões a cada hora
     echo=settings.debug
 )
 
 # Configurar pool de conexões para cx_Oracle
 @event.listens_for(engine, "connect")
 def set_oracle_session_info(dbapi_connection, connection_record):
-    """Configurar sessão Oracle para cx_Oracle"""
+    """Configurar sessão Oracle para cx_Oracle com otimizações de performance"""
     try:
         with dbapi_connection.cursor() as cursor:
             # Configurar formato de data
@@ -39,7 +43,11 @@ def set_oracle_session_info(dbapi_connection, connection_record):
             # Configurar charset
             cursor.execute("ALTER SESSION SET NLS_LANGUAGE = 'AMERICAN'")
             cursor.execute("ALTER SESSION SET NLS_TERRITORY = 'AMERICA'")
-            logger.debug("Sessão Oracle configurada com cx_Oracle")
+            
+            # Configurar fetch size para melhor performance
+            cursor.arraysize = 1000
+            
+            logger.debug("Sessão Oracle configurada com otimizações básicas")
     except cx_Oracle.Error as e:
         logger.error(f"Erro ao configurar sessão Oracle: {e}")
         raise
