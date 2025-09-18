@@ -51,8 +51,8 @@ services:
       DEBUG: "true"
       LOG_LEVEL: DEBUG
       
-      # Configurações de CORS
-      CORS_ORIGINS: "http://localhost:8877,http://127.0.0.1:8877"
+      # Configurações de CORS - Permitir qualquer origem para desenvolvimento
+      CORS_ORIGINS: "*"
       
       # Configurações de cache
       CACHE_TTL: 300
@@ -97,8 +97,8 @@ services:
       dockerfile: Dockerfile.dev
     container_name: saneamento-frontend
     environment:
-      # URL da API
-      NEXT_PUBLIC_API_URL: http://localhost:7700
+      # URL da API - Usando host.docker.internal para acesso do container ao host
+      NEXT_PUBLIC_API_URL: "http://host.docker.internal:7700"
       
       # Configurações do Next.js
       NODE_ENV: development

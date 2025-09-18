@@ -1,0 +1,44 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - heading "Resultados da Consulta" [level=1] [ref=e7]
+          - paragraph [ref=e8]: Saldos de estoque comparados entre SIAGRI e CIGAM
+        - button "Nova Consulta" [ref=e9] [cursor=pointer]:
+          - img
+          - text: Nova Consulta
+      - generic [ref=e10]:
+        - generic [ref=e12]: Filtros Aplicados
+        - generic [ref=e14]:
+          - generic [ref=e15]: "empresa_id: 1"
+          - generic [ref=e16]: "grupo_id: 84"
+          - generic [ref=e17]: "apenas_divergentes: false"
+          - generic [ref=e18]: "saldos_positivos_siagri: true"
+          - generic [ref=e19]: "saldos_positivos_cigam: false"
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: Saldos de Estoque
+          - generic [ref=e25]: Comparação detalhada entre os sistemas SIAGRI e CIGAM
+        - generic [ref=e26]:
+          - button "Exportar CSV" [disabled]:
+            - img
+            - text: Exportar CSV
+    - contentinfo [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e42]: Desenvolvido pela equipe interna de TI
+        - generic [ref=e44]: v1.0.0.4
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e45]:
+    - img [ref=e47]
+    - button "Open Tanstack query devtools" [ref=e95] [cursor=pointer]:
+      - img [ref=e96] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e149] [cursor=pointer]:
+    - img [ref=e150] [cursor=pointer]
+  - alert [ref=e153]
+```

@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Footer } from '@/components/footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -73,6 +74,7 @@ export default function RootLayout({
             <div className="relative flex min-h-screen flex-col">
               <div className="flex-1">{children}</div>
               {modal}
+              <Footer />
             </div>
             <Toaster />
           </Providers>

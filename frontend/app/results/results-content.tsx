@@ -100,6 +100,15 @@ export function ResultsContent() {
     ),
   },
   {
+    accessorKey: 'subgrupo',
+    header: 'Subgrupo',
+    cell: ({ row }) => (
+      <div className="text-center font-mono text-sm">
+        {row.original.subgrupo || 'N/A'}
+      </div>
+    ),
+  },
+  {
     accessorKey: 'saldo_siagri',
     header: 'SIAGRI',
     cell: ({ row }) => (

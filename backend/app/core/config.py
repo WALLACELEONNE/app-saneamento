@@ -38,11 +38,12 @@ class Settings(BaseSettings):
     # Cache TTL (em segundos)
     cache_ttl: int = 300  # 5 minutos
     
-    # CORS
+    # CORS - Permitir qualquer origem para desenvolvimento
     backend_cors_origins: list[str] = [
         "http://localhost:8877",
         "http://127.0.0.1:8877",
-        "http://frontend:8877"
+        "http://frontend:8877",
+        "*"  # Permite qualquer origem
     ]
     
     # Paginação
