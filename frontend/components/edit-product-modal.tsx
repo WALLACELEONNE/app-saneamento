@@ -1,41 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Save, X } from 'lucide-react';
-import { toast } from 'sonner';
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownSelect } from '@/components/ui/dropdown-select';
+import { X, Save, Loader2, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiMutations } from '@/lib/api';
+import { DetalheMaterial, AtualizarMaterial, SaldoItem } from '@/types';
 import { formatNumber } from '@/lib/utils';
-import type { SaldoItem, AtualizarMaterial } from '@/types';
+import { useUnidades, useTiposProduto, useTiposItem, useGrupos, useSubgrupos } from '@/hooks/use-dropdown-data';
 
 interface EditProductModalProps {
   /** Item do produto a ser editado */
@@ -63,10 +44,10 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
     unid_psv: string; // P.UNID_PSV -- STRING (obrigatório)
     situ_psv: 'A' | 'I'; // P.SITU_PSV -- STRING
     codi_cfp: string; // P.CODI_CFP -- STRING (opcional, mas mantido como string)
-    codi_gpr?: number; // P.CODI_GPR -- NUMBER
-    codi_sbg?: number; // P.CODI_SBG -- NUMBER
-    codi_tip?: number; // P.CODI_TIP -- NUMBER
-    prse_psv?: string; // P.PRSE_PSV -- STRING
+    codi_gpr: string; // P.CODI_GPR -- NUMBER
+    codi_sbg: string; // P.CODI_SBG -- NUMBER
+    codi_tip: string; // P.CODI_TIP -- NUMBER
+    prse_psv: string; // P.PRSE_PSV -- STRING
   }>({
     saldo_siagri: '',
     saldo_cigam: '',
@@ -76,11 +57,43 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
     unid_psv: '',
     situ_psv: 'A',
     codi_cfp: '',
-    codi_gpr: undefined,
-    codi_sbg: undefined,
-    codi_tip: undefined,
-    prse_psv: undefined,
+    codi_gpr: '',
+    codi_sbg: '',
+    codi_tip: '',
+    prse_psv: '',
   });
+
+  // Estados para validação
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Hooks para buscar dados dos dropdowns
+  const { data: unidades, isLoading: loadingUnidades } = useUnidades();
+  const { data: tiposProduto, isLoading: loadingTiposProduto } = useTiposProduto();
+  const { data: tiposItem, isLoading: loadingTiposItem } = useTiposItem();
+  const { data: grupos, isLoading: loadingGrupos } = useGrupos();
+  const { data: subgrupos, isLoading: loadingSubgrupos } = useSubgrupos(formData.codi_gpr);
+
+  // Função para validar NCM
+  const validateNCM = (ncm: string) => {
+    if (!ncm) return 'NCM é obrigatório';
+    if (ncm.length !== 8) return 'NCM deve ter exatamente 8 caracteres';
+    if (!/^\d+$/.test(ncm)) return 'NCM deve conter apenas números';
+    return '';
+  };
+
+  // Função para atualizar campos do formulário
+  const updateFormField = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Validar NCM em tempo real
+    if (field === 'ncm_psv') {
+      const error = validateNCM(value);
+      setErrors(prev => ({ ...prev, ncm_psv: error }));
+    } else {
+      // Limpar erro do campo se houver
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
 
   // Mutação para atualizar o material
   const updateMutation = useMutation({
@@ -103,6 +116,7 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
 
   /**
    * Atualiza os dados do formulário quando o produto muda
+   * Mantém os valores originais do produto para exibição nos selects
    */
   useEffect(() => {
     if (product) {
@@ -112,14 +126,19 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
         observacoes: '',
         // Campos validados conforme especificação do banco
         desc_psv: product.descricao || '',
-        unid_psv: product.unidade || '',
-        situ_psv: (product.status as 'A' | 'I') || 'A',
-        codi_cfp: product.ncm_cla_fiscal || '',
-        codi_gpr: product.codigo_grupo || undefined,
-        codi_sbg: product.codigo_subgrupo || undefined,
-        codi_tip: undefined, // Não disponível no SaldoItem atual
-        prse_psv: product.tipo_produto || undefined,
+        unid_psv: (product.unidade && typeof product.unidade === 'string') ? product.unidade.trim() : '',
+        situ_psv: product.status || 'A',
+        codi_cfp: product.ncm_cla_fiscal || '', // NCM/Classificação Fiscal (COALESCE de vários campos)
+        // Convertendo os códigos para string para compatibilidade com o DropdownSelect
+        // IMPORTANTE: Mantemos os valores originais para que sejam exibidos nos selects
+        codi_gpr: product.codigo_grupo ? product.codigo_grupo.toString().trim() : '',
+        codi_sbg: product.codigo_subgrupo ? product.codigo_subgrupo.toString().trim() : '',
+        codi_tip: (product.tipo_item && typeof product.tipo_item === 'string') ? product.tipo_item.trim() : '',
+        prse_psv: (product.tipo_material && typeof product.tipo_material === 'string') ? product.tipo_material.trim() : '',
       });
+      
+      // Limpar erros
+      setErrors({});
     } else {
       setFormData({
         saldo_siagri: '',
@@ -129,10 +148,10 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
         unid_psv: '',
         situ_psv: 'A',
         codi_cfp: '',
-        codi_gpr: undefined,
-        codi_sbg: undefined,
-        codi_tip: undefined,
-        prse_psv: undefined,
+        codi_gpr: '',
+        codi_sbg: '',
+        codi_tip: '',
+        prse_psv: '',
       });
     }
   }, [product]);
@@ -150,11 +169,12 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
       unid_psv: '',
       situ_psv: 'A',
       codi_cfp: '',
-      codi_gpr: undefined,
-      codi_sbg: undefined,
-      codi_tip: undefined,
-      prse_psv: undefined,
+      codi_gpr: '',
+      codi_sbg: '',
+      codi_tip: '',
+      prse_psv: '',
     });
+    setErrors({});
     onClose();
   };
 
@@ -200,7 +220,7 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
 
     // Prepara os dados para envio - tipos validados conforme banco de dados
     const updateData: AtualizarMaterial = {
-      produto_id: product.material, // P.CODI_PSV -- STRING
+      material_id: product.material, // P.CODI_PSV -- STRING
       empresa_id: product.empresa.toString(), // Convertido para string
       novo_saldo_siagri: novoSaldoSiagri,
       novo_saldo_cigam: novoSaldoCigam,
@@ -210,10 +230,10 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
       unid_psv: formData.unid_psv.trim(), // P.UNID_PSV -- STRING (obrigatório)
       situ_psv: formData.situ_psv as 'A' | 'I', // P.SITU_PSV -- STRING
       codi_cfp: formData.codi_cfp.trim() || undefined, // P.CODI_CFP -- STRING (opcional)
-      codi_gpr: formData.codi_gpr, // P.CODI_GPR -- NUMBER
-      codi_sbg: formData.codi_sbg, // P.CODI_SBG -- NUMBER
-      codi_tip: formData.codi_tip, // P.CODI_TIP -- NUMBER
-      prse_psv: formData.prse_psv, // P.PRSE_PSV -- STRING
+      codi_gpr: formData.codi_gpr ? parseInt(formData.codi_gpr) : undefined, // P.CODI_GPR -- NUMBER
+      codi_sbg: formData.codi_sbg ? parseInt(formData.codi_sbg) : undefined, // P.CODI_SBG -- NUMBER
+      codi_tip: formData.codi_tip ? parseInt(formData.codi_tip) : undefined, // P.CODI_TIP -- NUMBER
+      prse_psv: formData.prse_psv || undefined, // P.PRSE_PSV -- STRING
     };
 
     updateMutation.mutate(updateData);
@@ -241,7 +261,7 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
     formData.codi_cfp !== (product.ncm_cla_fiscal || '');
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Produto</DialogTitle>
@@ -265,12 +285,15 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
                   </Label>
                   <p className="font-mono text-sm">{product.material}</p>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    Tipo Item
-                  </Label>
-                  <p className="text-sm">{product.tipo_item || 'N/A'}</p>
-                </div>
+                <DropdownSelect
+                  label="Tipo Item"
+                  value={formData.codi_tip}
+                  onValueChange={(value) => updateFormField('codi_tip', value)}
+                  options={tiposItem || []}
+                  loading={loadingTiposItem}
+                  placeholder="Selecione o tipo de item"
+                  required
+                />
               </div>
 
               {/* Segunda linha - Descrição (editável) */}
@@ -289,40 +312,47 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
 
               {/* Terceira linha - Tipo Produto e Grupo */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    Tipo Produto
-                  </Label>
-                  <p className="text-sm">{product.tipo_produto || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    Grupo
-                  </Label>
-                  <p className="text-sm">{product.codigo_grupo || 'N/A'}</p>
-                </div>
+                <DropdownSelect
+                  label="Tipo Produto"
+                  value={formData.prse_psv}
+                  onValueChange={(value) => updateFormField('prse_psv', value)}
+                  options={tiposProduto || []}
+                  loading={loadingTiposProduto}
+                  placeholder="Selecione o tipo de produto"
+                  required
+                />
+                <DropdownSelect
+                  label="Grupo"
+                  value={formData.codi_gpr}
+                  onValueChange={(value) => updateFormField('codi_gpr', value)}
+                  options={grupos || []}
+                  loading={loadingGrupos}
+                  placeholder="Selecione o grupo"
+                  required
+                />
               </div>
 
               {/* Quarta linha - Subgrupo e Unidade */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    Subgrupo
-                  </Label>
-                  <p className="text-sm">{product.codigo_subgrupo || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label htmlFor="unidade" className="text-sm font-medium">
-                    Unidade *
-                  </Label>
-                  <Input
-                    id="unidade"
-                    value={formData.unid_psv}
-                    onChange={(e) => setFormData(prev => ({ ...prev, unid_psv: e.target.value }))}
-                    placeholder="Ex: UN, KG, L"
-                    className="mt-1"
-                  />
-                </div>
+                <DropdownSelect
+                  label="Subgrupo"
+                  value={formData.codi_sbg}
+                  onValueChange={(value) => updateFormField('codi_sbg', value)}
+                  options={subgrupos || []}
+                  loading={loadingSubgrupos}
+                  placeholder="Selecione o subgrupo"
+                  disabled={!formData.codi_gpr}
+                  required
+                />
+                <DropdownSelect
+                  label="Unidade"
+                  value={formData.unid_psv}
+                  onValueChange={(value) => updateFormField('unid_psv', value)}
+                  options={unidades || []}
+                  loading={loadingUnidades}
+                  placeholder="Selecione a unidade"
+                  required
+                />
               </div>
 
               {/* Quinta linha - Status e NCM */}
@@ -350,19 +380,22 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
                   </Label>
                   <Input
                     id="ncm"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={8}
                     value={formData.codi_cfp}
-                    onChange={(e) => setFormData(prev => ({ ...prev, codi_cfp: e.target.value }))}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '') // Remove não-dígitos
+                      updateFormField('codi_cfp', value)
+                    }}
                     placeholder="Digite o NCM (8 dígitos)"
                     className={`mt-1 ${
-                      formData.codi_cfp && formData.codi_cfp.length !== 8
-                        ? 'border-red-500 focus:border-red-500'
-                        : ''
+                      errors.codi_cfp ? 'border-red-500 focus:border-red-500' : ''
                     }`}
                   />
-                  {formData.codi_cfp && formData.codi_cfp.length !== 8 && (
-                    <p className="text-xs text-red-500 mt-1">
-                      NCM deve ter exatamente 8 caracteres
-                    </p>
+                  {errors.codi_cfp && (
+                    <p className="text-red-500 text-sm mt-1">{errors.codi_cfp}</p>
                   )}
                 </div>
               </div>

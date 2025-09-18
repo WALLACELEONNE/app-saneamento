@@ -2,8 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'sonner';
+import { api } from '@/lib/api';
 
 /**
  * Componente que fornece todos os providers necessários para a aplicação
@@ -49,6 +50,40 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       })
   );
+
+  // Cleanup de requisições pendentes quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      // Cancelar todas as requisições pendentes ao desmontar
+      api.cancelAllRequests();
+    };
+  }, []);
+
+  // Cleanup de requisições quando a página é recarregada ou fechada
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      api.cancelAllRequests();
+    };
+
+    const handleVisibilityChange = () => {
+      // Cancelar requisições quando a aba fica inativa por muito tempo
+      if (document.visibilityState === 'hidden') {
+        setTimeout(() => {
+          if (document.visibilityState === 'hidden') {
+            api.cancelAllRequests();
+          }
+        }, 30000); // 30 segundos
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

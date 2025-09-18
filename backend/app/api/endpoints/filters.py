@@ -422,10 +422,140 @@ async def get_statistics(db: Session = Depends(get_db)):
         logger.error(f"Erro ao buscar estatísticas: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
+@router.get("/unidades")
+async def get_unidades(db: Session = Depends(get_db)):
+    """
+    Busca todas as unidades de medida disponíveis
+    """
+    try:
+        cache_key = "unidades:all"
+        cached_data = await CacheManager.get(cache_key)
+        
+        if cached_data:
+            logger.info("Retornando unidades do cache")
+            return cached_data["data"]
+        
+        query = """
+            SELECT DISTINCT p.UNID_PSV as codigo, p.UNID_PSV as descricao
+            FROM JUPARANA.prodserv p
+            WHERE p.UNID_PSV IS NOT NULL 
+            AND p.prse_psv = 'U'
+            AND p.SITU_PSV = 'A'
+            ORDER BY p.UNID_PSV
+        """
+        
+        result = db.execute(text(query))
+        rows = result.fetchall()
+        
+        unidades = [
+            {"codigo": row.codigo, "descricao": row.descricao, "id": row.codigo, "nome": row.descricao}
+            for row in rows if row.codigo
+        ]
+        
+        # Armazena no cache por 30 minutos
+        await CacheManager.set(cache_key, {"data": unidades}, ttl=1800)
+        
+        logger.info(f"Encontradas {len(unidades)} unidades")
+        return unidades
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar unidades: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+@router.get("/tipos-produto")
+async def get_tipos_produto(db: Session = Depends(get_db)):
+    """
+    Busca todos os tipos de produto disponíveis
+    """
+    try:
+        cache_key = "tipos_produto:all"
+        cached_data = await CacheManager.get(cache_key)
+        
+        if cached_data:
+            logger.info("Retornando tipos de produto do cache")
+            return cached_data["data"]
+        
+        query = """
+            SELECT DISTINCT p.PRSE_PSV as codigo, 
+                   CASE p.PRSE_PSV 
+                       WHEN 'U' THEN 'Consumo'
+                       WHEN 'P' THEN 'Produto'
+                       WHEN 'K' THEN 'Kit/Pacote'
+                       WHEN 'B' THEN 'Bem Imobilizado'
+                       WHEN 'S' THEN 'Serviço'
+                       ELSE p.PRSE_PSV
+                   END as descricao
+            FROM JUPARANA.prodserv p
+            WHERE p.PRSE_PSV IS NOT NULL 
+            AND p.PRSE_PSV IN ('U', 'P', 'K', 'B', 'S')
+            AND p.SITU_PSV = 'A'
+            ORDER BY p.PRSE_PSV
+        """
+        
+        result = db.execute(text(query))
+        rows = result.fetchall()
+        
+        tipos = [
+            {"codigo": row.codigo, "descricao": row.descricao, "id": row.codigo, "nome": row.descricao}
+            for row in rows if row.codigo
+        ]
+        
+        # Armazena no cache por 30 minutos
+        await CacheManager.set(cache_key, {"data": tipos}, ttl=1800)
+        
+        logger.info(f"Encontrados {len(tipos)} tipos de produto")
+        return tipos
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar tipos de produto: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+@router.get("/tipos-item")
+async def get_tipos_item(db: Session = Depends(get_db)):
+    """
+    Busca todos os tipos de item disponíveis
+    """
+    try:
+        cache_key = "tipos_item:all"
+        cached_data = await CacheManager.get(cache_key)
+        
+        if cached_data:
+            logger.info("Retornando tipos de item do cache")
+            return cached_data["data"]
+        
+        query = """
+            SELECT DISTINCT p.CODI_TIP as codigo, 
+                   COALESCE(t.DESC_TIP, 'Tipo ' || p.CODI_TIP) as descricao
+            FROM JUPARANA.prodserv p
+            LEFT JOIN JUPARANA.tipoprodu t ON p.CODI_TIP = t.CODI_TIP
+            WHERE p.CODI_TIP IS NOT NULL 
+            AND p.prse_psv = 'U'
+            AND p.SITU_PSV = 'A'
+            ORDER BY p.CODI_TIP
+        """
+        
+        result = db.execute(text(query))
+        rows = result.fetchall()
+        
+        tipos = [
+            {"codigo": str(row.codigo), "descricao": row.descricao, "id": str(row.codigo), "nome": row.descricao}
+            for row in rows if row.codigo is not None
+        ]
+        
+        # Armazena no cache por 30 minutos
+        await CacheManager.set(cache_key, {"data": tipos}, ttl=1800)
+        
+        logger.info(f"Encontrados {len(tipos)} tipos de item")
+        return tipos
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar tipos de item: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
 @router.delete("/cache")
 async def clear_filters_cache():
     """
-    Limpa o cache dos filtros (empresas, subgrupos)
+    Limpa o cache dos filtros (empresas, subgrupos, unidades, tipos)
     Endpoint administrativo para forçar atualização dos dados
     """
     try:
@@ -433,6 +563,9 @@ async def clear_filters_cache():
         await CacheManager.clear_pattern("empresas:*")
         await CacheManager.clear_pattern("subgrupos:*")
         await CacheManager.clear_pattern("stats:*")
+        await CacheManager.clear_pattern("unidades:*")
+        await CacheManager.clear_pattern("tipos_produto:*")
+        await CacheManager.clear_pattern("tipos_item:*")
         
         logger.info("Cache de filtros limpo com sucesso")
         return {"message": "Cache limpo com sucesso"}

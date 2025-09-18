@@ -1,11 +1,11 @@
 'use client';
 
-import { Metadata } from 'next';
-import { useQuery } from '@tanstack/react-query';
+import { useApiQuery } from '@/hooks/use-api-query';
 import { FiltersForm } from '@/components/filters/filters-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Package, Filter, Loader2 } from 'lucide-react';
-import { getStatistics } from '@/lib/api';
+import { Building2, Package, Filter, Loader2, Database } from 'lucide-react';
+import { api, apiQueries } from '@/lib/api';
+import { Statistics, HealthCheck } from '@/types';
 
 // export const metadata: Metadata = {
 //   title: 'Filtros de Estoque',
@@ -19,10 +19,17 @@ import { getStatistics } from '@/lib/api';
  */
 export default function HomePage() {
   // Busca estatísticas reais do sistema
-  const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['statistics'],
-    queryFn: getStatistics,
+  const { data: stats, isLoading, error } = useApiQuery<Statistics>({
+    queryKey: apiQueries.keys.statistics,
+    queryFn: () => apiQueries.statistics(),
     refetchInterval: 5 * 60 * 1000, // Atualiza a cada 5 minutos
+  });
+
+  // Busca status de saúde do sistema
+  const { data: healthStatus, isLoading: healthLoading, error: healthError } = useApiQuery<HealthCheck>({
+    queryKey: apiQueries.keys.healthCheck,
+    queryFn: () => apiQueries.healthCheck(),
+    refetchInterval: 30 * 1000, // Atualiza a cada 30 segundos
   });
 
   return (
@@ -38,7 +45,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         {/* Card de informações sobre empresas */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -78,34 +85,55 @@ export default function HomePage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Materiais cadastrados
+              Total de materiais cadastrados
             </p>
           </CardContent>
         </Card>
 
-        {/* Card de status do sistema */}
+        {/* Card de informações sobre diferenças */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
-            <div className={`h-2 w-2 rounded-full ${
-              isLoading ? 'bg-yellow-500' : 
-              error ? 'bg-red-500' : 
-              stats?.status === 'online' ? 'bg-green-500' : 'bg-red-500'
-            }`} />
+            <CardTitle className="text-sm font-medium">Diferenças</CardTitle>
+            <Filter className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${
-              isLoading ? 'text-yellow-600' :
-              error ? 'text-red-600' :
-              stats?.status === 'online' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {isLoading ? 'Carregando...' :
-               error ? 'Offline' :
-               stats?.status === 'online' ? 'Online' : 'Offline'
-              }
+            <div className="text-2xl font-bold">
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : error ? (
+                '---'
+              ) : (
+                stats?.diferencas?.toLocaleString() || '0'
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Sistemas SIAGRI e CIGAM conectados
+              Materiais com diferenças de saldo
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Card de status da conexão com banco de dados */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Status do Sistema
+            </CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {healthLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : healthError ? (
+                <span className="text-red-500">Offline</span>
+              ) : healthStatus?.database === 'connected' ? (
+                <span className="text-green-500">Online</span>
+              ) : (
+                <span className="text-red-500">Offline</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Conexão com banco de dados
             </p>
           </CardContent>
         </Card>
@@ -116,8 +144,7 @@ export default function HomePage() {
         <CardHeader>
           <CardTitle>Filtros de Consulta</CardTitle>
           <CardDescription>
-            Selecione os filtros desejados para consultar os saldos de estoque.
-            Todos os campos são opcionais, mas pelo menos um deve ser preenchido.
+            Selecione os filtros desejados para consultar os saldos dos materiais
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,16 +160,19 @@ export default function HomePage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              1. Selecione a empresa desejada (obrigatório)
+              1. Selecione a empresa desejada
             </p>
             <p className="text-sm text-muted-foreground">
               2. Escolha o grupo de materiais (opcional)
             </p>
             <p className="text-sm text-muted-foreground">
-              3. Refine com subgrupo e material específico
+              3. Refine por subgrupo se necessário
             </p>
             <p className="text-sm text-muted-foreground">
-              4. Clique em "Consultar Saldos" para ver os resultados
+              4. Busque por material específico ou consulte todos
+            </p>
+            <p className="text-sm text-muted-foreground">
+              5. Clique em "Consultar Saldos" para ver os resultados
             </p>
           </CardContent>
         </Card>
@@ -153,12 +183,14 @@ export default function HomePage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Este sistema permite comparar os saldos de estoque entre os
-              sistemas SIAGRI e CIGAM em tempo real.
+              Este sistema permite comparar os saldos de materiais entre os
+              sistemas SIAGRI e CIGAM, identificando diferenças que precisam
+              ser saneadas antes da migração para o SAP.
             </p>
             <p className="text-sm text-muted-foreground">
-              Os dados são atualizados automaticamente e incluem informações
-              detalhadas sobre divergências entre os sistemas.
+              As diferenças encontradas podem ser corrigidas diretamente
+              através da interface, com registro de observações para
+              auditoria.
             </p>
           </CardContent>
         </Card>

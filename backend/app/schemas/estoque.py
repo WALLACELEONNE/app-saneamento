@@ -205,6 +205,7 @@ class SaldoItemSchema(BaseModel):
     grupo: Optional[int] = Field(None, description="Código do grupo")
     grupo_codigo: Optional[str] = Field(None, description="Código do grupo como string")
     grupo_descricao: Optional[str] = Field(None, description="Descrição do grupo")
+    subgrupo: Optional[int] = Field(None, description="Código do subgrupo")
     material: str = Field(..., description="Código do material")
     descricao: str = Field(..., description="Descrição do material")
     status: StatusMaterial = Field(..., description="Status do material (A/I)")

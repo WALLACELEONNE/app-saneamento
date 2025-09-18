@@ -23,8 +23,9 @@ RUN npm install --legacy-peer-deps --silent && \
 # Copiar arquivos do projeto
 COPY . .
 
-# Criar diretórios necessários
-RUN mkdir -p /app/.next /app/node_modules
+# Criar diretórios necessários e definir permissões
+RUN mkdir -p /app/.next /app/node_modules && \
+    chown -R nextjs:nodejs /app
 
 # Mudar para usuário não-root
 USER nextjs

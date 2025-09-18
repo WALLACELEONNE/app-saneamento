@@ -2,20 +2,17 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Package, Building2, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-
 import { api } from '@/lib/api';
 import { formatCurrency, formatNumber, formatDate, cn } from '@/lib/utils';
-import type { DetalheMaterial, StatusSaldo } from '@/types';
+import type { DetalheMaterial, StatusComparacao } from '@/types';
 
 interface MaterialPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -23,13 +20,14 @@ interface MaterialPageProps {
  */
 export async function generateMetadata({ params }: MaterialPageProps): Promise<Metadata> {
   try {
+    const { id } = await params;
     // We need to pass empresa_id, but we don't have it here
     // For now, we'll use a placeholder
-    const material = await api.getDetalheMaterial(params.id, '1');
+    const material = await api.getDetalheMaterial(id, '1');
     
     return {
-      title: `${material.produto.codigo ? `${material.produto.codigo} - ` : ''}${material.produto.nome} | Sistema de Saneamento`,
-      description: `Detalhes do material ${material.produto.nome}. Status: ${material.status}. Diferença entre sistemas: ${formatNumber(material.diferenca)}.`,
+      title: `${material.material.codigo ? `${material.material.codigo} - ` : ''}${material.material.nome} | Sistema de Saneamento`,
+      description: `Detalhes do material ${material.material.nome}. Status: ${material.status}. Diferença entre sistemas: ${formatNumber(material.diferenca)}.`,
     };
   } catch {
     return {
@@ -44,12 +42,13 @@ export async function generateMetadata({ params }: MaterialPageProps): Promise<M
  * Exibe informações completas sobre o produto e suas divergências
  */
 export default async function MaterialPage({ params }: MaterialPageProps) {
+  const { id } = await params;
   let material: DetalheMaterial;
   
   try {
     // We need to pass empresa_id, but we don't have it here
     // For now, we'll use a placeholder
-    material = await api.getDetalheMaterial(params.id, '1');
+    material = await api.getDetalheMaterial(id, '1');
   } catch {
     notFound();
   }
@@ -57,7 +56,7 @@ export default async function MaterialPage({ params }: MaterialPageProps) {
   /**
    * Renderiza o badge de status
    */
-  const renderStatusBadge = (status: StatusSaldo) => {
+  const renderStatusBadge = (status: StatusComparacao) => {
     const statusConfig = {
       igual: { label: 'OK', variant: 'default' as const, className: 'bg-green-100 text-green-800' },
       divergente: { label: 'Divergente', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
@@ -89,7 +88,7 @@ export default async function MaterialPage({ params }: MaterialPageProps) {
         
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            {material.produto.codigo ? `${material.produto.codigo} - ` : ''}{material.produto.nome}
+            {material.material.codigo ? `${material.material.codigo} - ` : ''}{material.material.nome}
           </h1>
           <p className="text-muted-foreground">
             Detalhes completos do produto e comparação entre sistemas
@@ -193,29 +192,29 @@ export default async function MaterialPage({ params }: MaterialPageProps) {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Código:</span>
-                  <span className="text-sm font-mono">{material.produto.codigo || 'N/A'}</span>
+                  <span className="text-sm font-mono">{material.material.codigo || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Nome:</span>
-                  <span className="text-sm">{material.produto.nome}</span>
+                  <span className="text-sm">{material.material.nome}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Grupo:</span>
-                  <span className="text-sm">{material.grupo_nome || 'N/A'}</span>
+                  <span className="text-sm">{material.material.grupo_id || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Subgrupo:</span>
-                  <span className="text-sm">{material.subgrupo_nome || 'N/A'}</span>
+                  <span className="text-sm">{material.material.subgrupo_id || 'N/A'}</span>
                 </div>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Unidade:</span>
-                  <span className="text-sm">{material.unidade || 'N/A'}</span>
+                  <span className="text-sm">{material.material.unidade || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Empresa:</span>
-                  <span className="text-sm">{material.empresa_nome || 'N/A'}</span>
+                  <span className="text-sm">{material.empresa.nome || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Status:</span>

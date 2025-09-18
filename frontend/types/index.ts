@@ -15,6 +15,9 @@ export enum StatusSaldo {
   INATIVO = 'I',
 }
 
+// Tipo para status de comparação de saldos
+export type StatusComparacao = 'igual' | 'divergente' | 'apenas_siagri' | 'apenas_cigam';
+
 // Interfaces base
 export interface BaseEntity {
   id: string;
@@ -64,6 +67,7 @@ export interface FiltrosEstoque {
 export interface SaldoItem {
   empresa: number;
   grupo?: number;
+  subgrupo?: number;
   material: string;
   descricao: string;
   status: 'A' | 'I';
@@ -121,7 +125,7 @@ export interface DetalheMaterial {
   saldo_cigam: number;
   diferenca: number;
   diferenca_percentual: number;
-  status: StatusSaldo;
+  status: StatusComparacao;
   historico: HistoricoSaldo[];
   ultima_atualizacao: string;
 }
@@ -149,6 +153,13 @@ export interface HealthCheck {
     cigam: 'ok' | 'error';
   };
   version: string;
+}
+
+// Interface para estatísticas do sistema
+export interface Statistics {
+  empresas: number;
+  materiais: number;
+  diferencas: number;
 }
 
 // Tipos para formulários

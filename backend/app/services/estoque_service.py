@@ -162,84 +162,93 @@ class EstoqueService:
         try:
             # Query principal de saldos (já implementada no endpoint)
             query_saldos = """
-                WITH EMPRESA (CODI_EMP) AS (
-                    SELECT DISTINCT CODI_EMP FROM juparana.CADEMP
-                ),
-                SALDO_CALCULADO AS (
-                    SELECT
-                        EMPRESA.CODI_EMP,
-                        P.CODI_GPR,
-                        p.codi_psv,
-                        p.DESC_PSV,
-                        p.SITU_PSV,
-                        e.tipo_est,
-                        COALESCE((
-                            SELECT SUM(sald_ctr) 
-                            FROM TABLE(JUPARANA.saldo_inicial_tipoest(
-                                EMPRESA.CODI_EMP, e.tipo_est, p.codi_psv, SYSDATE, 'S', NULL, NULL
-                            ))
-                        ), 0) AS SALDO
-                    FROM JUPARANA.prodserv p
-                    JOIN JUPARANA.estoque e ON e.TIPO_EST = 2
-                    JOIN EMPRESA ON 1 = 1
-                    WHERE p.prse_psv = 'U'
-                    AND p.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
-                    AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
-                    AND (:grupo IS NULL OR P.CODI_GPR = :grupo)
-                    AND (:material IS NULL OR UPPER(p.DESC_PSV) LIKE UPPER('%' || :material || '%'))
-                ),
-                SALDO_COM_RN AS (
-                    SELECT
-                        'SIAGRI' AS SISTEMA,
-                        SALDO_CALCULADO.CODI_EMP AS EMPRESA,
-                        SALDO_CALCULADO.CODI_GPR AS GRUPO,
-                        SALDO_CALCULADO.codi_psv AS MATERIAL,
-                        SALDO_CALCULADO.DESC_PSV AS DESCRICAO,
-                        SALDO_CALCULADO.SITU_PSV AS STATUS,
-                        CAST(SALDO_CALCULADO.SALDO AS NUMBER) AS SALDO,
-                        ROW_NUMBER() OVER (
-                            PARTITION BY SALDO_CALCULADO.CODI_EMP, SALDO_CALCULADO.codi_psv 
-                            ORDER BY SALDO_CALCULADO.codi_psv
-                        ) AS RN
-                    FROM SALDO_CALCULADO
-                ),
-                SALDO_SIAGRI AS (
-                    SELECT * FROM SALDO_COM_RN WHERE RN = 1
-                ),
-                SALDO_CIGAM AS (
-                    SELECT
-                        'CIGAM11' AS SISTEMA,
-                        CAST(E.CD_UNIDADE_DE_N AS NUMBER) AS EMPRESA,
-                        CAST(NULL AS NUMBER) AS GRUPO,
-                        CAST(E.CD_MATERIAL AS VARCHAR2(15)) AS MATERIAL,
-                        CAST(M.DESCRICAO AS VARCHAR2(120)) AS DESCRICAO,
-                        CAST('A' AS CHAR(1)) AS STATUS,
-                        CAST(E.QUANTIDADE AS NUMBER) AS SALDO
-                    FROM CIGAM11.ESESTOQU E
-                    JOIN CIGAM11.ESMATERI M ON E.CD_MATERIAL = M.CD_MATERIAL
-                    WHERE (:empresa IS NULL OR E.CD_UNIDADE_DE_N = LPAD(:empresa, 3, '0'))
-                )
-                SELECT 
-                    S1.EMPRESA,
-                    S1.GRUPO,
-                    S1.MATERIAL,
-                    S1.DESCRICAO,
-                    S1.STATUS,
-                    S1.SALDO AS SALDO_SIAGRI,
-                    COALESCE(S2.SALDO, 0) AS SALDO_CIGAM,
-                    (S1.SALDO - COALESCE(S2.SALDO, 0)) AS DIFERENCA_SALDO,
-                    -- Campos adicionais para o modal
-                    P.CODI_TIP AS TIPO_ITEM,
-                    P.PRSE_PSV AS TIPO_MATERIAL,
-                    P.CODI_GPR AS CODIGO_GRUPO,
-                    P.CODI_SBG AS CODIGO_SUBGRUPO,
-                    P.UNID_PSV AS UNIDADE,
-                    P.CODI_CFP AS NCM_CLA_FISCAL
-                FROM SALDO_SIAGRI S1
-                LEFT JOIN SALDO_CIGAM S2 ON S1.MATERIAL = S2.MATERIAL
-                LEFT JOIN JUPARANA.prodserv P ON S1.MATERIAL = P.CODI_PSV
-                WHERE S1.SALDO <> COALESCE(S2.SALDO, 0)
-                ORDER BY S1.EMPRESA, S1.GRUPO, S1.MATERIAL
+               WITH EMPRESA (CODI_EMP) AS (
+                SELECT DISTINCT CODI_EMP FROM juparana.CADEMP
+            ),
+            SALDO_CALCULADO AS (
+                SELECT
+                    EMPRESA.CODI_EMP,
+                    P.CODI_GPR,
+                    P.CODI_PSV,
+                    P.DESC_PSV,
+                    P.SITU_PSV,
+                    E.TIPO_EST,
+                    COALESCE((
+                        SELECT SUM(SALD_CTR) 
+                        FROM TABLE(JUPARANA.saldo_inicial_tipoest(
+                            EMPRESA.CODI_EMP, E.TIPO_EST, P.CODI_PSV, SYSDATE, 'S', NULL, NULL
+                        ))
+                    ), 0) AS SALDO
+                FROM JUPARANA.PRODSERV P
+                JOIN JUPARANA.ESTOQUE E ON E.TIPO_EST = 2
+                JOIN EMPRESA ON 1 = 1
+                WHERE P.PRSE_PSV = 'U'
+                AND P.CODI_GPR IN (80, 81, 83, 84, 85, 86, 87)
+                AND (:empresa IS NULL OR EMPRESA.CODI_EMP = :empresa)
+                AND (:grupo   IS NULL OR P.CODI_GPR = :grupo)
+                AND (:material IS NULL OR UPPER(P.DESC_PSV) LIKE UPPER('%' || :material || '%'))
+            ),
+            SALDO_COM_RN AS (
+                SELECT
+                    'SIAGRI' AS SISTEMA,
+                    SC.CODI_EMP AS EMPRESA,
+                    SC.CODI_GPR AS GRUPO,
+                    SC.CODI_PSV AS MATERIAL,
+                    SC.DESC_PSV AS DESCRICAO,
+                    SC.SITU_PSV AS STATUS,
+                    CAST(SC.SALDO AS NUMBER) AS SALDO,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY SC.CODI_EMP, SC.CODI_PSV 
+                        ORDER BY SC.CODI_PSV
+                    ) AS RN
+                FROM SALDO_CALCULADO SC
+            ),
+            SALDO_SIAGRI AS (
+                SELECT * FROM SALDO_COM_RN WHERE RN = 1
+            ),
+            SALDO_CIGAM AS (
+                SELECT
+                    'CIGAM11' AS SISTEMA,
+                    CAST(E.CD_UNIDADE_DE_N AS NUMBER) AS EMPRESA,
+                    CAST(NULL AS NUMBER) AS GRUPO,
+                    CAST(E.CD_MATERIAL AS VARCHAR2(15)) AS MATERIAL,
+                    CAST(M.DESCRICAO AS VARCHAR2(120)) AS DESCRICAO,
+                    CAST('A' AS CHAR(1)) AS STATUS,
+                    CAST(E.QUANTIDADE AS NUMBER) AS SALDO,
+                    -- Classificação fiscal vinda do CIGAM (tabela M)
+                    CAST(M.CLASSIFICACAO_F AS VARCHAR2(50)) AS CLASSIFICACAO_F
+                FROM CIGAM11.ESESTOQU E
+                JOIN CIGAM11.ESMATERI M ON E.CD_MATERIAL = M.CD_MATERIAL
+                WHERE (:empresa IS NULL OR E.CD_UNIDADE_DE_N = LPAD(:empresa, 3, '0'))
+            )
+            SELECT 
+                S1.EMPRESA,
+                S1.GRUPO,
+                S1.MATERIAL,
+                S1.DESCRICAO,
+                S1.STATUS,
+                S1.SALDO AS SALDO_SIAGRI,
+                COALESCE(S2.SALDO, 0) AS SALDO_CIGAM,
+                (S1.SALDO - COALESCE(S2.SALDO, 0)) AS DIFERENCA_SALDO,
+
+                -- Campos adicionais para o modal
+                P.CODI_TIP AS TIPO_ITEM,
+                P.PRSE_PSV AS TIPO_MATERIAL,
+                P.CODI_GPR AS CODIGO_GRUPO,
+                P.CODI_SBG AS CODIGO_SUBGRUPO,
+                P.UNID_PSV AS UNIDADE,
+
+                -- Temporariamente só do CIGAM, até definirmos o campo do SIAGRI:
+                S2.CLASSIFICACAO_F AS NCM
+
+            FROM SALDO_SIAGRI S1
+            LEFT JOIN SALDO_CIGAM S2
+                ON S1.EMPRESA  = S2.EMPRESA
+                AND S1.MATERIAL = S2.MATERIAL
+            LEFT JOIN JUPARANA.PRODSERV P 
+                ON S1.MATERIAL = P.CODI_PSV
+            WHERE S1.SALDO <> COALESCE(S2.SALDO, 0)
+            ORDER BY S1.EMPRESA, S1.GRUPO, S1.MATERIAL
                 OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
             """
             

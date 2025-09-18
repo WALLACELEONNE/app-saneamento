@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste DropdownSelect</title>
+</head>
+<body>
+    <h1>Teste de Valores do DropdownSelect</h1>
+    
+    <div>
+        <h2>Cenário 1: Valor existe nas opções</h2>
+        <p>Value: "A" | Opções: [{codigo: "A", nome: "Ativo"}, {codigo: "I", nome: "Inativo"}]</p>
+        <p>Resultado esperado: Deve mostrar "Ativo"</p>
+    </div>
+    
+    <div>
+        <h2>Cenário 2: Valor não existe nas opções</h2>
+        <p>Value: "X" | Opções: [{codigo: "A", nome: "Ativo"}, {codigo: "I", nome: "Inativo"}]</p>
+        <p>Resultado esperado: Deve mostrar placeholder</p>
+    </div>
+    
+    <div>
+        <h2>Cenário 3: Valor vazio</h2>
+        <p>Value: "" | Opções: [{codigo: "", nome: "(Vazio)"}, {codigo: "A", nome: "Ativo"}]</p>
+        <p>Resultado esperado: Deve mostrar "(Vazio)"</p>
+    </div>
+    
+    <script>
+        console.log('Testando comportamento do Select...');
+        
+        // Simular dados do produto
+        const product = {
+            tipo_item: "A",
+            tipo_material: "P", 
+            codigo_grupo: "1",
+            codigo_subgrupo: "10",
+            unidade: "UN"
+        };
+        
+        // Simular opções dos dropdowns
+        const tiposItem = [
+            {id: "1", codigo: "A", nome: "Ativo", descricao: "Item Ativo"},
+            {id: "2", codigo: "I", nome: "Inativo", descricao: "Item Inativo"}
+        ];
+        
+        const tiposProduto = [
+            {id: "1", codigo: "P", nome: "Produto", descricao: "Produto Normal"},
+            {id: "2", codigo: "S", nome: "Serviço", descricao: "Serviço"}
+        ];
+        
+        // Verificar se os valores do produto existem nas opções
+        console.log('Tipo Item do produto:', product.tipo_item);
+        console.log('Existe nas opções?', tiposItem.find(opt => opt.codigo === product.tipo_item));
+        
+        console.log('Tipo Material do produto:', product.tipo_material);
+        console.log('Existe nas opções?', tiposProduto.find(opt => opt.codigo === product.tipo_material));
+    </script>
+</body>
+</html>

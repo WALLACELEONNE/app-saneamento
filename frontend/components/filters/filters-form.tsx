@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { apiQueries } from '@/lib/api';
 import { objectToQueryString } from '@/lib/utils';
 import type { FormFilters } from '@/types';
+import { useApiQuery } from '@/hooks/use-api-query';
 
 /**
  * Schema de validação para o formulário de filtros
@@ -68,7 +68,7 @@ export function FiltersForm() {
   });
 
   // Queries para buscar dados dos filtros
-  const { data: empresasRaw = [], isLoading: loadingEmpresas } = useQuery({
+  const { data: empresasRaw = [], isLoading: loadingEmpresas } = useApiQuery({
     queryKey: apiQueries.keys.empresas,
     queryFn: apiQueries.empresas,
   });
@@ -81,7 +81,7 @@ export function FiltersForm() {
     ativa: true
   }));
 
-  const { data: gruposRaw = [], isLoading: loadingGrupos } = useQuery({
+  const { data: gruposRaw = [], isLoading: loadingGrupos } = useApiQuery({
     queryKey: apiQueries.keys.grupos(),
     queryFn: () => apiQueries.grupos(),
     // Grupos não dependem da empresa selecionada
@@ -94,7 +94,7 @@ export function FiltersForm() {
     codigo: grupo.codigo?.toString() || ''
   }));
 
-  const { data: subgruposRaw = [], isLoading: loadingSubgrupos } = useQuery({
+  const { data: subgruposRaw = [], isLoading: loadingSubgrupos } = useApiQuery({
     queryKey: apiQueries.keys.subgrupos(selectedGrupo),
     queryFn: () => apiQueries.subgrupos(selectedGrupo),
     enabled: !!selectedGrupo,
@@ -108,7 +108,7 @@ export function FiltersForm() {
     grupo_id: selectedGrupo || ''
   }));
 
-  const { data: materiaisRaw = [], isLoading: loadingMateriais } = useQuery({
+  const { data: materiaisRaw = [], isLoading: loadingMateriais } = useApiQuery({
     queryKey: apiQueries.keys.materiais({
       empresa_id: selectedEmpresa,
       grupo_id: selectedGrupo,

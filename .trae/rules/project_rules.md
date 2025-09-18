@@ -15,3 +15,5 @@
 - Não usar dados mock no projeto
 - Não usar dados de teste no projeto
 - Sempre verificar se as rotas retornam JSON
+- Evitar usar CURL pois trava o backend (chamadas)
+- Use mcp Playwright para os testes

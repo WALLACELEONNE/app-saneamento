@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useApiQuery } from '@/hooks/use-api-query';
 import { X, Package, Building2, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
 
 import {
@@ -15,32 +15,32 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+// Removed unused Separator import
 
 import { apiQueries } from '@/lib/api';
 import { formatCurrency, formatNumber, formatDate, cn } from '@/lib/utils';
-import type { StatusSaldo } from '@/types';
+import type { StatusComparacao } from '@/types';
 
 interface MaterialModalProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
  * Modal intercepted route para exibir detalhes do material
  * Exibe informações completas sobre o produto e suas divergências
  */
-export default function MaterialModal({ params }: MaterialModalProps) {
+export default async function MaterialModal({ params }: MaterialModalProps) {
   const router = useRouter();
-  const { id } = params;
+  const { id } = await params;
 
   // Query para buscar detalhes do material
   const {
     data: material,
     isLoading,
     error,
-  } = useQuery({
+  } = useApiQuery({
     queryKey: ['material', id],
     queryFn: () => apiQueries.detalheMaterial(id, ''), // Passando empresa_id vazio por enquanto
     enabled: !!id,
@@ -56,7 +56,7 @@ export default function MaterialModal({ params }: MaterialModalProps) {
   /**
    * Renderiza o badge de status
    */
-  const renderStatusBadge = (status: StatusSaldo) => {
+  const renderStatusBadge = (status: StatusComparacao) => {
     const statusConfig = {
       igual: { label: 'OK', variant: 'default' as const, className: 'bg-green-100 text-green-800' },
       divergente: { label: 'Divergente', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
@@ -139,7 +139,7 @@ export default function MaterialModal({ params }: MaterialModalProps) {
                 {isLoading ? (
                   <Skeleton className="h-6 w-48" />
                 ) : material ? (
-                  `${material.produto.codigo ? `${material.produto.codigo} - ` : ''}${material.produto.nome}`
+                  `${material.material.codigo ? `${material.material.codigo} - ` : ''}${material.material.nome}`
                 ) : (
                   'Material não encontrado'
                 )}
@@ -267,29 +267,29 @@ export default function MaterialModal({ params }: MaterialModalProps) {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Código:</span>
-                        <span className="text-sm font-mono">{material.produto.codigo || 'N/A'}</span>
+                        <span className="text-sm font-mono">{material.material.codigo || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Nome:</span>
-                        <span className="text-sm">{material.produto.nome}</span>
+                        <span className="text-sm">{material.material.nome}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Grupo:</span>
-                        <span className="text-sm">{material.grupo_nome || 'N/A'}</span>
+                        <span className="text-sm">{material.material.grupo_id || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Subgrupo:</span>
-                        <span className="text-sm">{material.subgrupo_nome || 'N/A'}</span>
+                        <span className="text-sm">{material.material.subgrupo_id || 'N/A'}</span>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Unidade:</span>
-                        <span className="text-sm">{material.unidade || 'N/A'}</span>
+                        <span className="text-sm">{material.material.unidade || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Empresa:</span>
-                        <span className="text-sm">{material.empresa_nome || 'N/A'}</span>
+                        <span className="text-sm">{material.empresa.nome || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Status:</span>

@@ -57,8 +57,9 @@ import { toast } from 'sonner';
 
 import { apiQueries } from '@/lib/api';
 import { formatCurrency, formatNumber, cn } from '@/lib/utils';
-import type { SaldoItem, StatusSaldo } from '@/types';
+import type { SaldoItem, StatusComparacao } from '@/types';
 import { EditProductModal } from '@/components/edit-product-modal';
+import { useApiQuery } from '@/hooks/use-api-query';
 
 export function ResultsContent() {
   const router = useRouter();
@@ -159,14 +160,16 @@ export function ResultsContent() {
       }
       
       // Caso contrário, mostrar status de comparação
-      const statusSaldo = status as StatusSaldo;
+      const statusSaldo = status as StatusComparacao;
       
       const statusConfig = {
-        'A': { label: 'OK', variant: 'default' as const, icon: CheckCircle },
-        'I': { label: 'Divergente', variant: 'destructive' as const, icon: AlertTriangle },
+        'igual': { label: 'OK', variant: 'default' as const, icon: CheckCircle },
+        'divergente': { label: 'Divergente', variant: 'destructive' as const, icon: AlertTriangle },
+        'apenas_siagri': { label: 'Apenas SIAGRI', variant: 'secondary' as const, icon: TrendingUp },
+        'apenas_cigam': { label: 'Apenas CIGAM', variant: 'secondary' as const, icon: TrendingDown },
       };
       
-      const config = statusConfig[statusSaldo] || statusConfig['A'];
+      const config = statusConfig[statusSaldo] || statusConfig['igual'];
       const Icon = config.icon;
       
       return (
@@ -231,18 +234,9 @@ export function ResultsContent() {
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => {
       if (value) {
-        // Mapeia os parâmetros da URL para o formato esperado pela API
-        if (key === 'empresa') {
-          params.empresa_id = value;
-        } else if (key === 'grupo') {
-          params.grupo_id = value;
-        } else if (key === 'subgrupo') {
-          params.subgrupo_id = value;
-        } else if (key === 'material') {
-          params.material_id = value;
-        } else {
-          params[key] = value;
-        }
+        // Mantém os nomes originais dos parâmetros da URL
+        // O mapeamento será feito na camada da API
+        params[key] = value;
       }
     });
     return params;
@@ -253,16 +247,9 @@ export function ResultsContent() {
     data: saldosData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: apiQueries.keys.saldos(filters, {
-      page: pagination.pageIndex + 1,
-      size: pagination.pageSize,
-    }),
-    queryFn: () => apiQueries.saldos(filters, {
-      page: pagination.pageIndex + 1,
-      size: pagination.pageSize,
-    }),
-    enabled: Object.keys(filters).length > 0,
+  } = useApiQuery({
+    queryKey: apiQueries.keys.saldos(filters, {}),
+    queryFn: () => apiQueries.saldos(filters, {}),
   });
 
   // Configuração da tabela
