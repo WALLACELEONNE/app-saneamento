@@ -251,20 +251,20 @@ class SaldosPaginatedResponse(BaseModel):
 class MaterialUpdateSchema(BaseModel):
     """
     Schema para atualização de material
-    Tipos validados conforme especificação do banco de dados:
-    P.CODI_GPR -- NUMBER
-    P.CODI_PSV -- STRING
-    P.CODI_SBG -- NUMBER
-    P.CODI_TIP -- NUMBER
+    
+    Campos disponíveis:
     P.DESC_PSV -- STRING
     P.PRSE_PSV -- STRING
     P.SITU_PSV -- STRING
     P.UNID_PSV -- STRING
+    P.CLAS_PSV -- STRING (Classificação do tipo de produto)
+    PD.CFIS_PRO -- STRING (NCM - Classificação Fiscal) - Tabela JUPARANA.PRODUTO
     """
     desc_psv: str = Field(..., max_length=120, description="P.DESC_PSV -- STRING: Descrição do material")
     situ_psv: StatusMaterial = Field(..., description="P.SITU_PSV -- STRING: Status do material (A/I)")
     unid_psv: str = Field(..., max_length=10, description="P.UNID_PSV -- STRING: Unidade do material (obrigatório)")
-    codi_cfp: Optional[str] = Field(None, max_length=8, description="Código de classificação fiscal (opcional)")
+    clas_psv: Optional[str] = Field(None, max_length=1, description="P.CLAS_PSV -- STRING: Classificação do tipo de produto (P=Produto, F=Fertilizante, M=Material, E=Equipamento) - Tabela JUPARANA.PRODSERV")
+    codi_cfp: Optional[str] = Field(None, max_length=8, description="PD.CFIS_PRO -- STRING: NCM - Classificação Fiscal (opcional) - Tabela JUPARANA.PRODUTO")
     codi_gpr: Optional[int] = Field(None, description="P.CODI_GPR -- NUMBER: Código do grupo")
     codi_sbg: Optional[int] = Field(None, description="P.CODI_SBG -- NUMBER: Código do subgrupo")
     codi_tip: Optional[int] = Field(None, description="P.CODI_TIP -- NUMBER: Código do tipo")

@@ -485,18 +485,59 @@ async def update_material(
     Implementa Server Action para updates otimistas
     """
     try:
-        # Query de atualização
-        query = """
-            UPDATE JUPARANA.prodserv 
-            SET DESC_PSV = :descricao, SITU_PSV = :status
-            WHERE codi_psv = :codigo
+        # Query de atualização - PRODSERV
+        update_prodserv_query = """
+            UPDATE JUPARANA.PRODSERV 
+            SET DESC_PSV = :desc_psv,
+                SITU_PSV = :situ_psv,
+                CLAS_PSV = :clas_psv
+            WHERE CODI_PSV = :codigo
         """
         
-        result = db.execute(text(query), {
-            "descricao": data.desc_psv,
-            "status": data.situ_psv.value,
-            "codigo": codigo
-        })
+        # Query de atualização - PRODUTO (NCM)
+        update_produto_query = """
+            UPDATE JUPARANA.PRODUTO 
+            SET CFIS_PRO = :ncm_cla_fiscal
+            WHERE CODI_PSV = :codigo
+        """
+        
+        # Query de atualização - CIGAM11.ESMATERI (CLASSIFICACAO_F - PRIORITÁRIO)
+        update_cigam_query = """
+            UPDATE CIGAM11.ESMATERI 
+            SET CLASSIFICACAO_F = :ncm_classificacao
+            WHERE CD_MATERIAL = :codigo
+        """
+        
+        # Parâmetros para as queries
+        params_prodserv = {
+            'codigo': codigo,
+            'desc_psv': data.desc_psv,
+            'situ_psv': data.situ_psv.value,
+            'clas_psv': data.clas_psv
+        }
+        
+        params_produto = {
+            'codigo': codigo,
+            'ncm_cla_fiscal': data.codi_cfp  # Usar o campo correto para NCM
+        }
+        
+        params_cigam = {
+            'codigo': codigo,
+            'ncm_classificacao': data.codi_cfp  # Usar o campo correto para NCM
+        }
+        
+        # Executa atualização na tabela PRODSERV
+        result_prodserv = db.execute(text(update_prodserv_query), params_prodserv)
+        
+        # Executa atualização PRIORITÁRIA na tabela CIGAM11.ESMATERI (se NCM foi fornecido)
+        if data.codi_cfp:
+            db.execute(text(update_cigam_query), params_cigam)
+        
+        # Executa atualização na tabela PRODUTO (se NCM foi fornecido)
+        if data.codi_cfp:
+            db.execute(text(update_produto_query), params_produto)
+        
+        result = result_prodserv
         
         if result.rowcount == 0:
             raise HTTPException(status_code=404, detail="Material não encontrado")
@@ -546,8 +587,9 @@ async def get_material_details(
                 P.CODI_GPR as codigo_grupo,
                 P.CODI_SBG as codigo_subgrupo,
                 P.UNID_PSV as unidade,
-                P.CODI_CFP as ncm_cla_fiscal
-            FROM JUPARANA.prodserv P
+                COALESCE(PD.CFIS_PRO, P.CLAS_PSV) as ncm_cla_fiscal
+            FROM JUPARANA.PRODSERV P
+            LEFT JOIN JUPARANA.PRODUTO PD ON PD.CODI_PSV = P.CODI_PSV
             WHERE P.CODI_PSV = :codigo
         """
         

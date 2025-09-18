@@ -110,7 +110,7 @@ export interface AtualizarMaterial {
   desc_psv: string; // P.DESC_PSV -- STRING
   unid_psv: string; // P.UNID_PSV -- STRING (obrigatório)
   situ_psv: 'A' | 'I'; // P.SITU_PSV -- STRING
-  codi_cfp?: string; // P.CODI_CFP -- STRING (opcional)
+  clas_psv?: string; // P.CLAS_PSV -- STRING: Classificação do tipo de produto (P=Produto, F=Fertilizante, M=Material, E=Equipamento) - Tabela JUPARANA.PRODSERV
   codi_gpr?: number; // P.CODI_GPR -- NUMBER
   codi_sbg?: number; // P.CODI_SBG -- NUMBER
   codi_tip?: number; // P.CODI_TIP -- NUMBER

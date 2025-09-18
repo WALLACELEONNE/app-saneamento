@@ -221,7 +221,7 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
     // Prepara os dados para envio - tipos validados conforme banco de dados
     const updateData: AtualizarMaterial = {
       material_id: product.material, // P.CODI_PSV -- STRING
-      empresa_id: product.empresa.toString(), // Convertido para string
+      empresa_id: product.empresa?.toString() || '', // Validação para evitar erro quando empresa for null
       novo_saldo_siagri: novoSaldoSiagri,
       novo_saldo_cigam: novoSaldoCigam,
       observacoes: formData.observacoes.trim() || undefined,
@@ -229,7 +229,8 @@ export function EditProductModal({ product, open, onClose }: EditProductModalPro
       desc_psv: formData.desc_psv.trim(), // P.DESC_PSV -- STRING
       unid_psv: formData.unid_psv.trim(), // P.UNID_PSV -- STRING (obrigatório)
       situ_psv: formData.situ_psv as 'A' | 'I', // P.SITU_PSV -- STRING
-      codi_cfp: formData.codi_cfp.trim() || undefined, // P.CODI_CFP -- STRING (opcional)
+      clas_psv: undefined, // P.CLAS_PSV -- STRING: Classificação do tipo de produto (P=Produto, F=Fertilizante, M=Material, E=Equipamento) - Campo não editável pelo usuário
+      codi_cfp: formData.codi_cfp.trim() || undefined, // PD.CFIS_PRO -- STRING: NCM - Classificação Fiscal (opcional) - Tabela JUPARANA.PRODUTO
       codi_gpr: formData.codi_gpr ? parseInt(formData.codi_gpr) : undefined, // P.CODI_GPR -- NUMBER
       codi_sbg: formData.codi_sbg ? parseInt(formData.codi_sbg) : undefined, // P.CODI_SBG -- NUMBER
       codi_tip: formData.codi_tip ? parseInt(formData.codi_tip) : undefined, // P.CODI_TIP -- NUMBER
